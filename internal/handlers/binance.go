@@ -60,11 +60,12 @@ func orderSymbol(
 	sideType binance.SideType,
 	orderType binance.OrderType,
 ) *binance.CreateOrderResponse {
-	order, err := client.NewCreateOrderService().Symbol(helpers.BtcSymbol(symbol)).
+	order, err := client.NewCreateOrderService().
+		Symbol(helpers.BtcSymbol(symbol)).
 		Side(sideType).
 		Type(orderType).
 		TimeInForce(binance.TimeInForceTypeGTC).
-		Quantity("5").
+		Quantity("5"). // TODO
 		Do(context.Background())
 
 	if err != nil {
