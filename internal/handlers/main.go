@@ -8,6 +8,7 @@ type Broker interface {
 
 var brokers = map[string]Broker{
     "binance": NewBinance(),
+    "eth": NewEth(),
 }
 
 func GetBroker(name string) Broker {

@@ -27,6 +27,7 @@ func msgLoop(b *tb.Bot, broker handlers.Broker) {
 		orderBuy := broker.Buy(symbol)
 		// ROI in percent
 		roi := 0
+
 		for {
 			roi = broker.GetRoi(orderBuy)
 			if roi >= 100 {
