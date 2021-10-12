@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -10,29 +10,33 @@ import (
 	"github.com/loic-roux-404/pump-bot/internal/helpers"
 )
 
-type binanceH struct {
+// BinanceH Handler structure
+type BinanceH struct {
 	client *binance.Client
 }
 
-func NewBinance() *binanceH {
+// NewBinance function
+// Create a binance broker
+func NewBinance() (*BinanceH, error) {
 	c := binance.NewClient(
 		os.Getenv("BINANCE_API_KEY"),
 		os.Getenv("BINANCE_API_SECRET"),
 	)
 
 	if c == nil {
-		log.Fatal("Binance client connection failed")
-		os.Exit(3)
+		return nil, fmt.Errorf("Binance client connection failed")
 	}
 
-	return &binanceH{client: c}
+	return &BinanceH{client: c}, nil
 }
 
-func (b *binanceH) Buy(symbol string) interface{} {
+// Buy func
+func (b *BinanceH) Buy(symbol string) (interface{}, error) {
 	return orderSymbol(b.client, symbol, binance.SideTypeBuy, binance.OrderTypeMarket)
 }
 
-func (b *binanceH) Sell(symbol string) interface{} {
+// Sell func
+func (b *BinanceH) Sell(symbol string) (interface{}, error) {
 	return orderSymbol(
 		b.client,
 		symbol,
@@ -41,13 +45,14 @@ func (b *binanceH) Sell(symbol string) interface{} {
 	)
 }
 
-func (*binanceH) GetRoi(order interface{}) int {
+// GetRoi function 
+func (*BinanceH) GetRoi(order interface{}) int {
 	biOrder := order.(*binance.CreateOrderResponse)
 
 	p, err := strconv.Atoi(biOrder.Price)
     if err != nil {
         // handle error
-        log.Println(err)
+        fmt.Println(err)
         return -2
     }
 
@@ -59,7 +64,7 @@ func orderSymbol(
 	symbol string,
 	sideType binance.SideType,
 	orderType binance.OrderType,
-) *binance.CreateOrderResponse {
+) (*binance.CreateOrderResponse, error) {
 	order, err := client.NewCreateOrderService().
 		Symbol(helpers.BtcSymbol(symbol)).
 		Side(sideType).
@@ -69,10 +74,10 @@ func orderSymbol(
 		Do(context.Background())
 
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		return nil, fmt.Errorf("%s", err)
 	}
 
-	log.Println(order)
-	return order
+	fmt.Println(order)
+
+	return order, nil
 }
