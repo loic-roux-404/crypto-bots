@@ -1,4 +1,4 @@
-package handlers
+package ibrokers
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/adshao/go-binance/v2"
-	"github.com/loic-roux-404/pump-bot/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
 
 // BinanceHandler Handler structure

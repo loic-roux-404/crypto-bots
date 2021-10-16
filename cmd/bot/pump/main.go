@@ -7,18 +7,23 @@ import (
 
 	tb "gopkg.in/tucnak/telebot.v2"
 
-	"github.com/loic-roux-404/pump-bot/internal/handlers"
-	"github.com/loic-roux-404/pump-bot/internal/telegram"
-	"github.com/loic-roux-404/pump-bot/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/pkg/brokers"
+	"github.com/loic-roux-404/crypto-bots/internal/telegram"
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
 
 func main() {
 	b := telegram.GetTgBot()
-	cex := handlers.GetBroker("binance")
+	cex, err := brokers.Get("binance")
+
+	if (err != nil) {
+		log.Fatal(err)
+	}
+
 	msgLoop(b, cex)
 }
 
-func msgLoop(b *tb.Bot, broker handlers.Broker) {
+func msgLoop(b *tb.Bot, broker brokers.Broker) {
 	b.Handle(tb.OnChannelPost, func(m *tb.Message) {
 		// all the text messages that weren't
 		// captured by existing handlers
