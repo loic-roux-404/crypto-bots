@@ -1,6 +1,7 @@
 package networks
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
@@ -53,8 +54,18 @@ func NewEth() (Network, error) {
 // Send transaction to address
 func (e *ErcHandler) Send(address string, amount *big.Int) (hash common.Hash, err error) {
 	// prepare transaction requirements
-	finalAddress := e.parseAddress("") // TODO
+	finalAddress, err := e.parseAddress("") // TODO
+
+	if err != nil {
+		panic(err)
+	}
+
 	nonce, err := e.getNonce(finalAddress)
+
+	if err != nil {
+		panic(err)
+	}
+
 	data := []byte{}
 	// Create new transaction
 	tx := types.NewTransaction(
@@ -74,7 +85,7 @@ func (e *ErcHandler) Send(address string, amount *big.Int) (hash common.Hash, er
 	}
 
 	// Send the transaction
-	err = e.client.SendTransaction(ctx, signTx)
+	err = e.client.SendTransaction(context.Background(), signTx)
 
 	if err != nil {
 		panic(err)
@@ -94,13 +105,13 @@ func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
 	// nonce, err := client.NonceAt(ctx, address, nil)
 
 	// This is the nonce that should be used for the next transaction.
-	nonce, err := e.client.PendingNonceAt(ctx, address)
+	nonce, err := e.client.PendingNonceAt(context.Background(), address)
+	finalNonce := new(big.Int).SetUint64(nonce)
 
 	if err != nil {
 		return nil, fmt.Errorf("Unable to determine nonce : %s", err)
 	}
-
-	return nonce, nil
+	return finalNonce, nil
 }
 
 func (e *ErcHandler) initPrivateKeyFromMem(key string) *ecdsa.PrivateKey {
@@ -108,12 +119,12 @@ func (e *ErcHandler) initPrivateKeyFromMem(key string) *ecdsa.PrivateKey {
 	return nil
 }
 
-func (e *ErcHandler) parseAddress(address string) common.Address {
+func (e *ErcHandler) parseAddress(address string) (common.Address, error) {
 	re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 
+	if (!re.MatchString(address)) {
+		return common.HexToAddress(address), fmt.Errorf("Address is invalid: %v", address) 
+	}
 
-	fmt.Printf("Address is valid: %v\n", re.MatchString(address))
-
-
-	return common.HexToAddress(address)
+	return common.HexToAddress(address), nil
 }
