@@ -2,66 +2,79 @@ package handlers
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/adshao/go-binance/v2"
-	"github.com/loic-roux-404/pump-bot/internal/helpers"
+	"github.com/loic-roux-404/pump-bot/internal/model/token"
 )
 
-type binanceH struct {
+// BinanceHandler Handler structure
+type BinanceHandler struct {
 	client *binance.Client
+	btcPair bool
 }
 
-func NewBinance() *binanceH {
+// NewBinance function
+// Create a binance broker
+// return *BinanceHandler
+func NewBinance() (Broker, error) {
 	c := binance.NewClient(
 		os.Getenv("BINANCE_API_KEY"),
 		os.Getenv("BINANCE_API_SECRET"),
 	)
 
 	if c == nil {
-		log.Fatal("Binance client connection failed")
-		os.Exit(3)
+		return nil, fmt.Errorf("Binance client connection failed")
 	}
 
-	return &binanceH{client: c}
+	return &BinanceHandler{client: c, btcPair: true}, nil
 }
 
-func (b *binanceH) Buy(symbol string) interface{} {
-	return orderSymbol(b.client, symbol, binance.SideTypeBuy, binance.OrderTypeMarket)
+// Buy func
+func (b *BinanceHandler) Buy(symbol string) (BrokerOperationResponse, error) {
+	// TODO comply with an common interface and manage orderSymbol return
+	// TODO get pair by config
+	tokenPair := token.NewBtcPair(symbol)
+	return orderSymbol(b.client, tokenPair, binance.SideTypeBuy, binance.OrderTypeMarket)
 }
 
-func (b *binanceH) Sell(symbol string) interface{} {
+// Sell func
+func (b *BinanceHandler) Sell(symbol string) (BrokerOperationResponse, error) {
+	// TODO comply with a common interface and manage orderSymbol return
+	// TODO get pair by config
+	tokenPair := token.NewBtcPair(symbol)
 	return orderSymbol(
 		b.client,
-		symbol,
+		tokenPair,
 		binance.SideTypeSell,
 		binance.OrderTypeMarket,
 	)
 }
 
-func (*binanceH) GetRoi(order interface{}) int {
+// GetRoi function 
+func (*BinanceHandler) GetRoi(order BrokerOperationResponse) (int, error) {
 	biOrder := order.(*binance.CreateOrderResponse)
 
 	p, err := strconv.Atoi(biOrder.Price)
     if err != nil {
         // handle error
-        log.Println(err)
-        return -2
+        // fmt.Println(err)
+        return -2, err
     }
 
-	return p
+	return p, err
 }
 
 func orderSymbol(
 	client *binance.Client,
-	symbol string,
+	token *token.Pair,
 	sideType binance.SideType,
 	orderType binance.OrderType,
-) *binance.CreateOrderResponse {
+) (*binance.CreateOrderResponse, error) {
 	order, err := client.NewCreateOrderService().
-		Symbol(helpers.BtcSymbol(symbol)).
+		Symbol(token.ToString()).
 		Side(sideType).
 		Type(orderType).
 		TimeInForce(binance.TimeInForceTypeGTC).
@@ -69,10 +82,10 @@ func orderSymbol(
 		Do(context.Background())
 
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		return nil, fmt.Errorf("%s", err)
 	}
 
-	log.Println(order)
-	return order
+	fmt.Println(order)
+
+	return order, nil
 }

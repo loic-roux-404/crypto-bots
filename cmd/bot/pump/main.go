@@ -9,7 +9,7 @@ import (
 
 	"github.com/loic-roux-404/pump-bot/internal/handlers"
 	"github.com/loic-roux-404/pump-bot/internal/telegram"
-	"github.com/loic-roux-404/pump-bot/internal/helpers"
+	"github.com/loic-roux-404/pump-bot/internal/model/token"
 )
 
 func main() {
@@ -23,12 +23,15 @@ func msgLoop(b *tb.Bot, broker handlers.Broker) {
 		// all the text messages that weren't
 		// captured by existing handlers
 		log.Printf("m: %v\n", m)
-		symbol := helpers.GrepSymbol(m.Payload)
-		orderBuy := broker.Buy(symbol)
+		symbol := token.Grep(m.Payload)
+		orderBuy, err := broker.Buy(symbol)
+		log.Fatal(err)
 		// ROI in percent
 		roi := 0
+
 		for {
-			roi = broker.GetRoi(orderBuy)
+			roi, err = broker.GetRoi(orderBuy)
+			log.Panic(err)
 			if roi >= 100 {
 				broker.Sell(symbol)
 				break
