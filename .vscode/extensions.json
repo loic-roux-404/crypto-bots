@@ -3,6 +3,7 @@
         "766b.go-outliner",
         "premparihar.gotestexplorer",
         "golang.go",
-        "neverik.go-critic"
+        "neverik.go-critic",
+        "juanblanco.solidity"
     ]
 }
