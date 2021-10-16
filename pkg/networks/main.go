@@ -4,7 +4,7 @@ import (
 	"math/big"
 
     "github.com/ethereum/go-ethereum/common"
-    "github.com/loic-roux-404/pump-bot/internal/model/symbol"
+    "github.com/loic-roux-404/crypto-bots/internal/model/symbol"
 )
 
 // Network type

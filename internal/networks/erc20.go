@@ -33,6 +33,7 @@ func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config)  {
 
 	return cnf
 }
+
 // ErcHandler Handler config
 type ErcHandler struct {
 	client *ethclient.Client

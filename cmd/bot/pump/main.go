@@ -7,9 +7,9 @@ import (
 
 	tb "gopkg.in/tucnak/telebot.v2"
 
-	"github.com/loic-roux-404/pump-bot/internal/handlers"
-	"github.com/loic-roux-404/pump-bot/internal/telegram"
-	"github.com/loic-roux-404/pump-bot/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/pkg/brokers"
+	"github.com/loic-roux-404/crypto-bots/internal/telegram"
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
 
 func main() {
