@@ -21,10 +21,12 @@ DEX : SRM / uniswapv3
 
 ### Build and deploy
 
+- [ ] g version manager doc `g install latest` (1.17.2)
 - [ ] Mage targets
 - [ ] Github actions tests
 - [ ] Github actions semantic release monorepo
 - [ ] Badges (ci, report, go reference)
+
 ### Compatibility
 
 CEX : 

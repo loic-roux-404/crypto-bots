@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"os"
 	"regexp"
-
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -53,7 +53,11 @@ func NewEth() (Network, error) {
 }
 
 // Send transaction to address
-func (e *ErcHandler) Send(address string, amount *big.Int) (hash common.Hash, err error) {
+func (e *ErcHandler) Send(
+	address string, 
+	pair token.Pair, 
+	amount *big.Int,
+) (hash common.Hash, err error) {
 	// prepare transaction requirements
 	finalAddress, err := e.parseAddress("") // TODO
 
@@ -97,7 +101,7 @@ func (e *ErcHandler) Send(address string, amount *big.Int) (hash common.Hash, er
 }
 
 // Call smart contract method
-func (e *ErcHandler) Call(address string) (hash *common.Hash, err error) {
+func (e *ErcHandler) Call(address string) (hash common.Hash, err error) {
 	return nil, nil
 }
 
