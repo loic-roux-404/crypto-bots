@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"math/big"
 	"os"
-	"regexp"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"	
 )
+
+const netName = "erc20"
 
 // Config of etherul handler
 type config struct {
@@ -22,7 +25,7 @@ type config struct {
 // NewConf of erc handler
 func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config)  {
 	cnf := &config{big.NewInt(91.00), big.NewInt(9.00)}
-	// TODO get consistent gas price
+	// TODO get consistent gas price from api
 	if (gasLimit != nil) {
 		cnf.gasLimit = gasPrice
 	}
@@ -36,8 +39,9 @@ func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config)  {
 
 // ErcHandler Handler config
 type ErcHandler struct {
+	name string
 	client *ethclient.Client
-	currentPrivateKey *ecdsa.PrivateKey
+	privKey *ecdsa.PrivateKey
 	config *config
 }
 
@@ -49,17 +53,23 @@ func NewEth() (Network, error) {
 	  return nil, fmt.Errorf("Failed to connect to the Ethereum client: %v", err)
 	}
 
-	return &ErcHandler{client: conn, config: newConf(nil, nil)}, nil
+	return &ErcHandler{
+		name: netName,
+		privKey: getPrivateKeyFromMem(netName),
+		client: conn, 
+		config: newConf(nil, nil),
+	}, nil
 }
 
 // Send transaction to address
+// Central function which need defer after the call
 func (e *ErcHandler) Send(
 	address string, 
 	pair token.Pair, 
 	amount *big.Int,
 ) (hash common.Hash, err error) {
 	// prepare transaction requirements
-	finalAddress, err := e.parseAddress("") // TODO
+	finalAddress := common.HexToAddress(address)
 
 	if err != nil {
 		panic(err)
@@ -83,7 +93,11 @@ func (e *ErcHandler) Send(
 	)
 	
 	// Sign the transaction with private key
-	signTx, err := types.SignTx(tx, types.HomesteadSigner{}, e.initPrivateKeyFromMem("")) // See other signers in transaction_signing.go file in go-ethereum project
+	signTx, err := types.SignTx(
+		tx, 
+		types.HomesteadSigner{}, 
+		e.privKey,
+	)
 
 	if err != nil {
 		panic(err)
@@ -100,9 +114,16 @@ func (e *ErcHandler) Send(
 	return signTx.Hash(), nil
 }
 
+// TODO follow https://goethereumbook.org/address-check/
+
+// Approve smart contract
+func (e *ErcHandler) Approve(address string) (hash common.Hash, err error) {
+	return [20]byte(), nil
+}
+
 // Call smart contract method
 func (e *ErcHandler) Call(address string) (hash common.Hash, err error) {
-	return nil, nil
+	return byte(0), nil
 }
 
 func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
@@ -119,17 +140,8 @@ func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
 	return finalNonce, nil
 }
 
-func (e *ErcHandler) initPrivateKeyFromMem(key string) *ecdsa.PrivateKey {
+func getPrivateKeyFromMem(key string) *ecdsa.PrivateKey {
 	// TODO memstorage call
 	return nil
 }
 
-func (e *ErcHandler) parseAddress(address string) (common.Address, error) {
-	re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
-
-	if (!re.MatchString(address)) {
-		return common.HexToAddress(address), fmt.Errorf("Address is invalid: %v", address) 
-	}
-
-	return common.HexToAddress(address), nil
-}

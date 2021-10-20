@@ -20,6 +20,23 @@ var (
 	goexe = "go"
 )
 
+var toolsCmds = []string{
+	"github.com/ethereum/go-ethereum/cmd/evm",
+	"github.com/ethereum/go-ethereum/cmd/geth",
+}
+
+func tools() error {
+	for _, cmd := range toolsCmds {
+		err := sh.Run("go", "install", cmd)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func init() {
 	if exe := os.Getenv("GOEXE"); exe != "" {
 		goexe = exe
@@ -28,7 +45,13 @@ func init() {
 	// We want to use Go modules even if the source lives inside GOPATH.
 	// The default is "auto".
 	os.Setenv("GO111MODULE", "on")
+	// Etherum need a c compiler
+	// Verify if a clang / gcc exist in your PATH
+	os.Setenv("CGO_ENABLED", "1")
+
+	tools()
 }
+
 
 type Build mg.Namespace
 

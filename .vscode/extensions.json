@@ -4,6 +4,9 @@
         "premparihar.gotestexplorer",
         "golang.go",
         "neverik.go-critic",
-        "juanblanco.solidity"
+        "juanblanco.solidity",
+        "zxh404.vscode-proto3",
+        "plex.vscode-protolint",
+        "tintinweb.vscode-ethover"
     ]
 }

@@ -1,6 +1,7 @@
 # Crypto bots
 
 > Monorepo fr many types of bot
+
 ## Features
 
 - Listing of twitter exchange messages (WIP)
@@ -21,11 +22,23 @@ DEX : SRM / uniswapv3
 
 ### Build and deploy
 
-- [ ] g version manager doc `g install latest` (1.17.2)
+1. Install
+
+*Geth* :
+    - `C compiler` : clang or gcc 
+    - `Go` : g install latest (1.17.2)
+    - `mage`
+
+*Solidity*: `pip3 install solc-select && solc-select install 0.5.16 && solc-select use 0.5.16`
+
+- [ ] Solidity `pip3 install solc-select`
+- [ ] g version manager doc `g install latest` 
 - [ ] Mage targets
 - [ ] Github actions tests
 - [ ] Github actions semantic release monorepo
 - [ ] Badges (ci, report, go reference)
+- [ ] Check the use of `azblockchain.azure-blockchain`
+- [ ] truffle test
 
 ### Compatibility
 
