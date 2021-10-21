@@ -1,13 +1,19 @@
-//+build mage
+//go:build mage
+// +build mage
 
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+
+	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
+	"github.com/loic-roux-404/crypto-bots/build/mage/solidity"
 )
 
 const (
@@ -18,23 +24,13 @@ var (
 	ports = []string{"4205"}
 	cmds  = []string{"sniper"}
 	goexe = "go"
+	currentDir, _ = os.Getwd()
 )
 
 var toolsCmds = []string{
 	"github.com/ethereum/go-ethereum/cmd/evm",
 	"github.com/ethereum/go-ethereum/cmd/geth",
-}
-
-func tools() error {
-	for _, cmd := range toolsCmds {
-		err := sh.Run("go", "install", cmd)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	"github.com/ethereum/go-ethereum/cmd/abigen",
 }
 
 func init() {
@@ -49,7 +45,11 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	tools()
+	err := cmd.BinInstall(toolsCmds)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 
@@ -77,19 +77,37 @@ func (Build) Cmds() error {
 
 type Test mg.Namespace
 
+var (
+	mockLoc = filepath.Join(currentDir, "tests", "mocks")
+	mockDest = filepath.Join(mockLoc, "data")
+	mockName = "glitch"
+)
+
+// mockContract
+// Initialise and compile contract in go to test it
+func (Test) mockContract() error {
+	return solidity.Compile(mockLoc, mockName, mockDest)
+}
+
 // Runs go mod download and then installs the binary.
 func (Test) Api() error {
     return nil
 }
 
+// Web Test
 // Runs go mod download and then installs the binary.
+// e2e test TODO (k6) ?
 func (Test) Web() error {
     return nil
 }
 
 // Runs go mod download and then installs the binary.
-func (Test) Cmds() error {
-    return nil
+func (t Test) Cmds() error {
+	if err := t.mockContract(); err != nil{
+		return err
+	}
+
+	return nil
 }
 
 type Release mg.Namespace

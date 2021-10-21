@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"math/big"
 	"os"
-	
+
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"	
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
 
 const netName = "erc20"
@@ -70,6 +71,7 @@ func (e *ErcHandler) Send(
 ) (hash common.Hash, err error) {
 	// prepare transaction requirements
 	finalAddress := common.HexToAddress(address)
+	e.estimateGas(finalAddress)
 
 	if err != nil {
 		panic(err)
@@ -118,12 +120,33 @@ func (e *ErcHandler) Send(
 
 // Approve smart contract
 func (e *ErcHandler) Approve(address string) (hash common.Hash, err error) {
+	// TODO address validator
+	finalAddress := common.HexToAddress(address)
 	return [20]byte(), nil
 }
 
 // Call smart contract method
 func (e *ErcHandler) Call(address string) (hash common.Hash, err error) {
-	return byte(0), nil
+	finalAddress := common.HexToAddress(address)
+	return []byte{0}, nil
+}
+
+func (e *ErcHandler) estimateGas(address common.Address) error {
+	estimatedGas, err := e.client.EstimateGas(context.Background(), ethereum.CallMsg{
+		To:   &address,
+		Data: []byte{0},
+	})
+
+	if err != nil {
+		return err
+	}
+	
+	gasLimit := int64(float64(estimatedGas) * 1.30)
+	fmt.Println(gasLimit) // 27305
+
+	e.config.gasLimit.Set(big.NewInt(gasLimit))
+
+	return nil
 }
 
 func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
@@ -140,8 +163,9 @@ func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
 	return finalNonce, nil
 }
 
-func getPrivateKeyFromMem(key string) *ecdsa.PrivateKey {
-	// TODO memstorage call
-	return nil
-}
+func valAndGetAddress(address string) common.Address {
+	// prepare transaction requirements
+	finalAddress := common.HexToAddress(address)
 
+	return finalAddress
+}
