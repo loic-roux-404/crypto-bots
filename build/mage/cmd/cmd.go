@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/loic-roux-404/crypto-bots/tools/system"
 	"strings"
-
+	
 	"github.com/magefile/mage/sh"
+
+	"github.com/loic-roux-404/crypto-bots/internal/system"
 )
 
 // ToFlags transform
@@ -34,7 +35,7 @@ func BinInstall(tools []string) error {
 	for _, pkg := range tools {
 
 		if pkgCommandExist(pkg) {
-			fmt.Printf("%s Already installed", pkg)
+			fmt.Printf("%s Already installed\n", pkg)
 			return nil
 		}
 
@@ -46,4 +47,9 @@ func BinInstall(tools []string) error {
 	}
 
 	return nil
+}
+
+// ToLocalCmd to local command
+func ToLocalCmd(prefix string, cmd string) string {
+	return strings.Join([]string{prefix, cmd, "main.go"}, "/")
 }

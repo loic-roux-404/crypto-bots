@@ -1,4 +1,4 @@
-package key
+package account
 
 import (
 	"io/ioutil"
@@ -11,16 +11,40 @@ import (
 
 // const privKey = "PRIVATE_KEY"
 
-// GetKecacc256 method
-func GetKecacc256(memonic string, existingKeyStore string) (accounts.Account, error) {
-	dir, err := os.Getwd()
+var (
+		dir, _ = os.Getwd()
+		ks = keystore.NewKeyStore(
+		dir,
+		keystore.StandardScryptN, 
+		keystore.StandardScryptP,
+	)
+)
 
+// Kecacc256 type
+type Kecacc256 struct {
+	store *keystore.KeyStore
+	currentAccount accounts.Account
+}
+
+// NewKecacc256 kecacc
+func NewKecacc256(memonic string, existingKeyStore string) (*Kecacc256, error) {
+	acc, err := initAccount(memonic, existingKeyStore)
+	
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	ks := keystore.NewKeyStore(dir, keystore.StandardScryptN, keystore.StandardScryptP)
-	
+	return &Kecacc256{
+		store: ks,
+		currentAccount: acc,
+	}, nil
+}
+
+func initAccount(memonic string, existingKeyStore string) (accounts.Account, error) {
+	if existingKeyStore == "" {
+		return ks.NewAccount(memonic)
+	}
+
 	exStore, err := ioutil.ReadFile(existingKeyStore)
 
 	if (err != nil || len(exStore) > 0) {
@@ -41,4 +65,14 @@ func importKeyStore(
 	}
 
 	return ks.Import(jsonBytes, memonic, memonic)
+}
+
+// Account initialized
+func (k *Kecacc256) Account() accounts.Account {
+	return k.currentAccount
+}
+
+// Store to use methods
+func (k *Kecacc256) Store() *keystore.KeyStore {
+	return k.store
 }

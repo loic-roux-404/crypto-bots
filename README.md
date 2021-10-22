@@ -20,18 +20,23 @@ DEX : SRM / uniswapv3
 - [ ] pull ERC-20 data
 - k6 for load and e2e tests ?
 
+### Bug
+
+- [ ] Avoid multiple keystores by creating one if missing or fetch most recent (use cmd args)
+
 ### Build and deploy
 
 1. Install
 
+*Go* :
+    - `curl -sSL https://git.io/g-install | sh -s`
+    - `g install 1.17.2`
+
 *Geth* :
-    - `C compiler` : clang or gcc 
-    - `Go` : g install latest (1.17.2)
+    - `C compiler` : Ensure you have clang (Apple) Mingw2 clang (win) or gcc (Linux) 
     - `mage`
 
-*Solidity*: `pip3 install solc-select && solc-select install 0.5.16 && solc-select use 0.5.16`
-
-- [ ] Solidity `pip3 install solc-select`
+- [x] Solidity `pip3 install solc-select` over mage
 - [ ] g version manager doc `g install latest` 
 - [ ] Mage targets
 - [ ] Github actions tests
@@ -72,3 +77,7 @@ DEX :
 1. build
 
     Magefile parts and dockerfile (.df)
+
+### Development
+
+Used : `https://github.com/thoas/go-funk`

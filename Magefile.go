@@ -13,7 +13,10 @@ import (
 	"github.com/magefile/mage/sh"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
+	// mage:import
 	"github.com/loic-roux-404/crypto-bots/build/mage/solidity"
+	"github.com/loic-roux-404/crypto-bots/internal/system"
+	"github.com/thoas/go-funk"
 )
 
 const (
@@ -24,7 +27,7 @@ var (
 	ports = []string{"4205"}
 	cmds  = []string{"sniper"}
 	goexe = "go"
-	currentDir, _ = os.Getwd()
+	currentDir = system.GetCurrDir()
 )
 
 var toolsCmds = []string{
@@ -45,23 +48,36 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds)
-
-	if err != nil {
+	err := cmd.BinInstall(toolsCmds); if err != nil {
 		panic(err)
 	}
 }
 
+var Default = All
 
 type Build mg.Namespace
 
 // Runs go mod download and then installs the binary.
-func (Build) Api() error {
-	/* if err := sh.Run("go", "mod", "download"); err != nil {
+func All() error {
+	b := new(Build)
+
+	err := b.Cmds(""); if err != nil {
 		return err
 	}
-    return sh.Run("go", "install", "./...")
-    */
+
+	err = b.Api(); if err != nil {
+		return err
+	}
+
+	err = b.Web(); if err != nil {
+		return err
+	}
+
+    return nil
+}
+
+// Runs go mod download and then installs the binary.
+func (Build) Api() error {
     return nil
 }
 
@@ -71,23 +87,34 @@ func (Build) Web() error {
 }
 
 // Runs go mod download and then installs the binary.
-func (Build) Cmds() error {
-    return nil
+func (Build) Cmds(name string) error {
+
+	if len(name) > 0 {
+		cmds = funk.Filter(cmds, func(x string) bool {
+			return x == name
+		}).([]string)
+	}	
+
+	for _, c := range cmds {
+		finalc := cmd.ToLocalCmd("cmd/bot", c)
+		dest := filepath.Join(".", "bin", c)
+		fmt.Printf("Building %s... in %s", finalc, dest)
+
+		err := sh.Run(goexe, "build", "-o", dest, finalc); if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type Test mg.Namespace
 
 var (
-	mockLoc = filepath.Join(currentDir, "tests", "mocks")
+	mockLoc = filepath.Join(".", "tests", "mocks")
 	mockDest = filepath.Join(mockLoc, "data")
 	mockName = "glitch"
 )
-
-// mockContract
-// Initialise and compile contract in go to test it
-func (Test) mockContract() error {
-	return solidity.Compile(mockLoc, mockName, mockDest)
-}
 
 // Runs go mod download and then installs the binary.
 func (Test) Api() error {
@@ -103,7 +130,8 @@ func (Test) Web() error {
 
 // Runs go mod download and then installs the binary.
 func (t Test) Cmds() error {
-	if err := t.mockContract(); err != nil{
+	s := new(solidity.Solidity)
+	if err := s.Compile(mockLoc, mockName, mockDest); err != nil{
 		return err
 	}
 
@@ -138,19 +166,22 @@ func (Release) SemRelease(prerelease bool, noCi bool) error {
 
 type Deploy mg.Namespace
 
+// Web ui deploy
 func (Deploy) Web() error {
 	return nil
 }
 
+// Api grpc endpoint
 func (Deploy) Api() error {
 	return nil
 }
 
+// Command line deploy
 func (Deploy) Cmds() error {
 	return nil
 }
 
-// Remove dev libraries and build/test artifacts
+// Clean Remove dev libraries and build/test artifacts
 func Clean() error {
 	return nil //clean.Clean()
 }

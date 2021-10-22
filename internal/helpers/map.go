@@ -2,14 +2,14 @@ package helpers
 
 import "fmt"
 
-type fnMap map[string](func (args ...interface{}) (interface{}, error))
+// FnMap type
+type FnMap map[string](interface{})
 
 // GetInMap secure get in map
-func GetInMap(m fnMap, name string, args ...interface{}) (interface{}, error) {
-	if fn, ok := m[name]; ok {
-        final, err := fn(args...)
-
-        return final, err
+func GetInMap(m FnMap, name string) (interface{}, error) {
+	if v := m[name]; v != nil {
+        println(v)
+        return v, nil
     }
 
     return nil, fmt.Errorf("No field named %s available in map", name)

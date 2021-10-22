@@ -3,6 +3,7 @@ package ibrokers
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -19,17 +20,17 @@ type BinanceHandler struct {
 // NewBinance function
 // Create a binance broker
 // return *BinanceHandler
-func NewBinance() (Broker, error) {
+func NewBinance() Broker {
 	c := binance.NewClient(
 		os.Getenv("BINANCE_API_KEY"),
 		os.Getenv("BINANCE_API_SECRET"),
 	)
 
 	if c == nil {
-		return nil, fmt.Errorf("Binance client connection failed")
+		log.Panic("Binance client connection failed")
 	}
 
-	return &BinanceHandler{client: c, btcPair: true}, nil
+	return &BinanceHandler{client: c, btcPair: true}
 }
 
 // Buy func

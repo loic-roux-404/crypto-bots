@@ -11,6 +11,6 @@ import (
 // Send to wallet and call smart contract
 type Network interface {
 	Send(address string, pair token.Pair, amount *big.Int) (hash common.Hash, err error)
-	Approve(address string) (hash common.Hash, err error)
-	Call(address string) (hash common.Hash, err error)
+	//Approve(address string) (hash common.Hash, err error)
+	//Call(address string) (hash common.Hash, err error)
 }

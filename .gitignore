@@ -2,3 +2,6 @@
 .semrel
 *.abi
 *.bin
+UTC--*
+/bin/*
+!/bin/.gitkeep

@@ -2,8 +2,8 @@ package inetworks
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 
@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/loic-roux-404/crypto-bots/internal/model/account"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
 
@@ -21,11 +22,18 @@ const netName = "erc20"
 type config struct {
 	gasLimit *big.Int
 	gasPrice *big.Int 
+	ipc string
 }
 
 // NewConf of erc handler
-func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config)  {
-	cnf := &config{big.NewInt(91.00), big.NewInt(9.00)}
+func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config, error)  {
+	ipc := os.Getenv("ERC_IPC")
+
+	if (ipc == "") {
+		return nil, fmt.Errorf("No IPC url configured")
+	}
+
+	cnf := &config{big.NewInt(91.00), big.NewInt(9.00), ipc}
 	// TODO get consistent gas price from api
 	if (gasLimit != nil) {
 		cnf.gasLimit = gasPrice
@@ -35,31 +43,45 @@ func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config)  {
 		cnf.gasPrice = gasPrice
 	}
 
-	return cnf
+	return cnf, nil
 }
 
 // ErcHandler Handler config
 type ErcHandler struct {
 	name string
 	client *ethclient.Client
-	privKey *ecdsa.PrivateKey
+	kecacc *account.Kecacc256
 	config *config
 }
 
 // NewEth create etherum handler
-func NewEth() (Network, error) {
-	conn, err := ethclient.Dial(os.Getenv("ERC_IPC"),)
+func NewEth() Network {
+	cnf, err := newConf(nil, nil); if err != nil {
+		log.Panic(err)
+	}
+
+	log.Printf("Connecting to %s...", cnf.ipc)
+	conn, err := ethclient.Dial(os.Getenv("ERC_IPC"))
 
 	if err != nil {
-	  return nil, fmt.Errorf("Failed to connect to the Ethereum client: %v", err)
+		log.Panicf("Failed to connect to the Ethereum client: %v", err)
+	}
+
+	acc, err := account.NewKecacc256(
+		os.Getenv("WALLET_MEMONIC"), 
+		os.Getenv("WALLET_EXISTING_KEYSTORE"),
+	)
+
+	if (err != nil) {
+		log.Panicf("Failed to init wallet: %v", err)
 	}
 
 	return &ErcHandler{
 		name: netName,
-		privKey: getPrivateKeyFromMem(netName),
+		kecacc: acc,
 		client: conn, 
-		config: newConf(nil, nil),
-	}, nil
+		config: cnf,
+	}
 }
 
 // Send transaction to address
@@ -69,49 +91,27 @@ func (e *ErcHandler) Send(
 	pair token.Pair, 
 	amount *big.Int,
 ) (hash common.Hash, err error) {
-	// prepare transaction requirements
-	finalAddress := common.HexToAddress(address)
-	e.estimateGas(finalAddress)
-
-	if err != nil {
-		panic(err)
-	}
-
-	nonce, err := e.getNonce(finalAddress)
-
-	if err != nil {
-		panic(err)
-	}
-
-	data := []byte{}
 	// Create new transaction
-	tx := types.NewTransaction(
-		nonce.Uint64(),
-		finalAddress, 
-		amount,
-		e.config.gasLimit.Uint64(),
-		e.config.gasPrice,
-		data,
-	)
-	
+	tx, err := e.createTx(address, amount, nil)
+
 	// Sign the transaction with private key
-	signTx, err := types.SignTx(
-		tx, 
-		types.HomesteadSigner{}, 
-		e.privKey,
+	signTx, err := e.kecacc.Store().SignTx(
+		e.kecacc.Account(),
+		tx,
+		big.NewInt(3),
 	)
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// Send the transaction
 	err = e.client.SendTransaction(context.Background(), signTx)
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
-	
+
 	// Obtain transaction hash as a string
 	return signTx.Hash(), nil
 }
@@ -119,17 +119,17 @@ func (e *ErcHandler) Send(
 // TODO follow https://goethereumbook.org/address-check/
 
 // Approve smart contract
-func (e *ErcHandler) Approve(address string) (hash common.Hash, err error) {
-	// TODO address validator
-	finalAddress := common.HexToAddress(address)
-	return [20]byte(), nil
-}
+// func (e *ErcHandler) Approve(address string) (hash common.Hash, err error) {
+// 	// TODO address validator
+// 	finalAddress := common.HexToAddress(address)
+// 	return [20]byte{0}, nil
+// }
 
-// Call smart contract method
-func (e *ErcHandler) Call(address string) (hash common.Hash, err error) {
-	finalAddress := common.HexToAddress(address)
-	return []byte{0}, nil
-}
+// // Call smart contract method
+// func (e *ErcHandler) Call(address string) (hash common.Hash, err error) {
+// 	finalAddress := common.HexToAddress(address)
+// 	return []byte{0}, nil
+// }
 
 func (e *ErcHandler) estimateGas(address common.Address) error {
 	estimatedGas, err := e.client.EstimateGas(context.Background(), ethereum.CallMsg{
@@ -160,7 +160,40 @@ func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Unable to determine nonce : %s", err)
 	}
+
 	return finalNonce, nil
+}
+
+func (e *ErcHandler) createTx(
+	address string,
+	amount *big.Int,
+	data []byte,
+) (*types.Transaction, error) {
+		// prepare transaction requirements
+		finalAddress := common.HexToAddress(address)
+		e.estimateGas(finalAddress)
+	
+		nonce, err := e.getNonce(finalAddress)
+	
+		if err != nil {
+			return nil, err
+		}
+
+		if (data == nil || len(data) > 0) {
+			data = []byte{}
+		}
+
+		// Create new transaction
+		tx := types.NewTransaction(
+			nonce.Uint64(),
+			finalAddress, 
+			amount,
+			e.config.gasLimit.Uint64(),
+			e.config.gasPrice,
+			data,
+		)
+
+		return tx, nil
 }
 
 func valAndGetAddress(address string) common.Address {

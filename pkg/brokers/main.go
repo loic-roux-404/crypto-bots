@@ -1,20 +1,23 @@
 package brokers
 
 import (
-	"github.com/loic-roux-404/crypto-bots/internal/ibrokers"
+	"log"
+
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
+	"github.com/loic-roux-404/crypto-bots/internal/ibrokers"
 )
 
-// BrokerMap type
-type BrokerMap map[string](func () (ibrokers.Broker, error))
-
-var bs = BrokerMap {
-    "binance": ibrokers.NewBinance,
+var bs = helpers.FnMap {
+    "binance": ibrokers.NewBinance(),
 }
 
 // Get in map
 func Get(name string) (ibrokers.Broker, error) {
     broker, err := helpers.GetInMap(bs, name)
+
+    if err != nil {
+        log.Fatal(err)
+    }
 
     return broker.(ibrokers.Broker), err
 }

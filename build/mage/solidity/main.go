@@ -4,11 +4,41 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+
+	"github.com/loic-roux-404/crypto-bots/internal/system"
 )
 
+// Solidity mage namespace
+type Solidity mg.Namespace
+
+const solSelect = "solc-select"
+
+// Install if missing
+func (Solidity) install(version string) error {
+	if system.CommandExist(solSelect) {
+		return nil
+	}
+
+	if system.CommandExist("python3") || system.CommandExist("python") {
+		return fmt.Errorf("Missing python3, install it to use solidity")
+	}
+
+	sh.Run("pip3", "install", solSelect)
+	sh.Run(solSelect, "install", version)
+	sh.Run(solSelect, "use", solSelect, version)
+
+	return nil
+}
+
 // Compile smart contract
-func Compile(mockLoc string, mockName string, mockDest string) error {
+func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) error {
+	// TODO use a yaml config to set version
+	err := s.install("0.5.16"); if err != nil {
+		return err
+	}
+
 	finalMockName := fmt.Sprintf("%s.sol", mockName)
 	var (
 		pcv2Contract = filepath.Join(mockLoc, finalMockName)
@@ -16,7 +46,6 @@ func Compile(mockLoc string, mockName string, mockDest string) error {
 		pcv2Abi = filepath.Join(mockDest, fmt.Sprintf("%s.abi", mockName))
 		mockDestArg = fmt.Sprintf("--output-dir=%s", mockDest)
 	)
-
 
 	if err := sh.Run("solc", "--abi", pcv2Contract, mockDestArg);
 	err != nil {
