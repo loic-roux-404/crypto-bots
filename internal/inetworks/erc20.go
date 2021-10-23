@@ -25,8 +25,16 @@ type config struct {
 	ipc string
 }
 
+// Options used from cli
+type Options struct {
+	memonic  string
+	keystore string `default:"default_keystore.json"`
+	ipc 	 string `default:"https://eth-ropsten.alchemyapi.io/v2/xxBP5S83g-JC_P4sy7tw_7bjkF1UESko"`
+}
+
 // NewConf of erc handler
 func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config, error)  {
+	// TODO implement https://www.sohamkamani.com/golang/options-pattern/
 	ipc := os.Getenv("ERC_IPC")
 
 	if (ipc == "") {

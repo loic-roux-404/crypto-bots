@@ -16,7 +16,9 @@ var nets = helpers.FnMap{
 
 // GetNetwork in map
 func GetNetwork(name string) (inetworks.Network, error) {
-    net, err := helpers.GetInMap(nets, name)
+    net, err := helpers.GetInMap(nets, name); if err != nil {
+        log.Fatal(err)
+    }
 
     return net.(inetworks.Network), err
 }

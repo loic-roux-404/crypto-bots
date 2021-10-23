@@ -13,9 +13,7 @@ var bs = helpers.FnMap {
 
 // Get in map
 func Get(name string) (ibrokers.Broker, error) {
-    broker, err := helpers.GetInMap(bs, name)
-
-    if err != nil {
+    broker, err := helpers.GetInMap(bs, name); if err != nil {
         log.Fatal(err)
     }
 

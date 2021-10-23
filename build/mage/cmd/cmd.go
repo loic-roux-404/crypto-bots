@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
-	
+
 	"github.com/magefile/mage/sh"
 
 	"github.com/loic-roux-404/crypto-bots/internal/system"
