@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	ports = []string{"4205"}
-	cmds  = []string{"sniper"}
-	goexe = "go"
+	ports      = []string{"4205"}
+	cmds       = []string{"sniper"}
+	goexe      = "go"
 	currentDir = system.GetCurrDir()
 )
 
@@ -48,7 +48,9 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds); if err != nil {
+	err := cmd.BinInstall(toolsCmds)
+
+	if err != nil {
 		panic(err)
 	}
 }
@@ -61,46 +63,62 @@ type Build mg.Namespace
 func All() error {
 	b := new(Build)
 
-	err := b.Cmds(""); if err != nil {
+	err := b.Cmds("")
+	if err != nil {
 		return err
 	}
 
-	err = b.Api(); if err != nil {
+	err = b.Api()
+	if err != nil {
 		return err
 	}
 
-	err = b.Web(); if err != nil {
+	err = b.Web()
+	if err != nil {
 		return err
 	}
 
-    return nil
+	return nil
 }
 
 // Runs go mod download and then installs the binary.
 func (Build) Api() error {
-    return nil
+	return nil
 }
 
 // Runs go mod download and then installs the binary.
 func (Build) Web() error {
-    return nil
+	return nil
 }
+
+const (
+	BUILD = "build"
+	RUN   = "run"
+)
+
+var mode = BUILD
 
 // Runs go mod download and then installs the binary.
 func (Build) Cmds(name string) error {
-
 	if len(name) > 0 {
 		cmds = funk.Filter(cmds, func(x string) bool {
 			return x == name
 		}).([]string)
-	}	
+	}
 
 	for _, c := range cmds {
 		finalc := cmd.ToLocalCmd("cmd/bot", c)
-		dest := filepath.Join(".", "bin", c)
-		fmt.Printf("Building %s... in %s", finalc, dest)
+		// Default to verbose in run (dev) mode
+		dest := "-v"
 
-		err := sh.Run(goexe, "build", "-o", dest, finalc); if err != nil {
+		if mode == BUILD {
+			dest = filepath.Join(".", "bin", c)
+			fmt.Printf("Building %s in %s...", finalc, dest)
+			dest = fmt.Sprintf("-o %s", dest)
+		}
+
+		err := sh.Run(goexe, mode, dest, finalc)
+		if err != nil {
 			return err
 		}
 	}
@@ -108,30 +126,39 @@ func (Build) Cmds(name string) error {
 	return nil
 }
 
+// CmdsRun dev command
+func (b Build) CmdsRun(name string) error {
+	mode = RUN
+	err := b.Cmds(name)
+	mode = BUILD
+
+	return err
+}
+
 type Test mg.Namespace
 
 var (
-	mockLoc = filepath.Join(".", "tests", "mocks")
+	mockLoc  = filepath.Join(".", "tests", "mocks")
 	mockDest = filepath.Join(mockLoc, "data")
 	mockName = "glitch"
 )
 
 // Runs go mod download and then installs the binary.
 func (Test) Api() error {
-    return nil
+	return nil
 }
 
 // Web Test
 // Runs go mod download and then installs the binary.
 // e2e test TODO (k6) ?
 func (Test) Web() error {
-    return nil
+	return nil
 }
 
 // Runs go mod download and then installs the binary.
 func (t Test) Cmds() error {
 	s := new(solidity.Solidity)
-	if err := s.Compile(mockLoc, mockName, mockDest); err != nil{
+	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
 		return err
 	}
 
@@ -141,7 +168,7 @@ func (t Test) Cmds() error {
 type Release mg.Namespace
 
 const (
-    semverExe = "semantic-release"
+	semverExe = "semantic-release"
 )
 
 var semverFlags = []string{
@@ -151,15 +178,15 @@ var semverFlags = []string{
 
 // Release semantic release
 func (Release) SemRelease(prerelease bool, noCi bool) error {
-    if (prerelease) {
-        semverFlags = append(semverFlags, "prerelease")
-    }
+	if prerelease {
+		semverFlags = append(semverFlags, "prerelease")
+	}
 
-    if (noCi) {
-        semverFlags = append(semverFlags, "no-ci")
-    }
+	if noCi {
+		semverFlags = append(semverFlags, "no-ci")
+	}
 
-    finalFlags := strings.Split(strings.Join(semverFlags, " --"), " ")
+	finalFlags := strings.Split(strings.Join(semverFlags, " --"), " ")
 
 	return sh.Run("semantic-release", finalFlags...)
 }

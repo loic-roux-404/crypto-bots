@@ -14,42 +14,44 @@ import (
 
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	arg "github.com/alexflint/go-arg"
 )
 
-const netName = "erc20"
+const netName = "eth"
+
+var args struct {
+	gasLimit int64 `default:"91"`
+	gasPrice int64 `default:"9"`
+	memonic  string `arg:"required"`
+	keystore string `default:"default_keystore.json"`
+	ipc 	 string `default:"https://eth-ropsten.alchemyapi.io/v2/xxBP5S83g-JC_P4sy7tw_7bjkF1UESko"`
+}
 
 // Config of etherul handler
 type config struct {
 	gasLimit *big.Int
 	gasPrice *big.Int 
-	ipc string
-}
-
-// Options used from cli
-type Options struct {
 	memonic  string
-	keystore string `default:"default_keystore.json"`
-	ipc 	 string `default:"https://eth-ropsten.alchemyapi.io/v2/xxBP5S83g-JC_P4sy7tw_7bjkF1UESko"`
+	keystore string
+	ipc 	 string
 }
 
 // NewConf of erc handler
-func newConf(gasLimit *big.Int, gasPrice *big.Int) (*config, error)  {
-	// TODO implement https://www.sohamkamani.com/golang/options-pattern/
-	ipc := os.Getenv("ERC_IPC")
+func newConf() (*config, error)  {
+	arg.MustParse(&args)
+	var (
+		gasLimit = big.NewInt(args.gasLimit)
+		gasPrice = big.NewInt(args.gasPrice)
+		memonic = args.memonic
+		keystore = args.keystore
+		ipc = args.ipc
+	)
 
 	if (ipc == "") {
 		return nil, fmt.Errorf("No IPC url configured")
 	}
 
-	cnf := &config{big.NewInt(91.00), big.NewInt(9.00), ipc}
-	// TODO get consistent gas price from api
-	if (gasLimit != nil) {
-		cnf.gasLimit = gasPrice
-	}
-
-	if (gasPrice != nil) {
-		cnf.gasPrice = gasPrice
-	}
+	cnf := &config{gasLimit, gasPrice, ipc, memonic, keystore}
 
 	return cnf, nil
 }
@@ -64,12 +66,12 @@ type ErcHandler struct {
 
 // NewEth create etherum handler
 func NewEth() Network {
-	cnf, err := newConf(nil, nil); if err != nil {
+	cnf, err := newConf(); if err != nil {
 		log.Panic(err)
 	}
 
 	log.Printf("Connecting to %s...", cnf.ipc)
-	conn, err := ethclient.Dial(os.Getenv("ERC_IPC"))
+	conn, err := ethclient.Dial(cnf.ipc)
 
 	if err != nil {
 		log.Panicf("Failed to connect to the Ethereum client: %v", err)
