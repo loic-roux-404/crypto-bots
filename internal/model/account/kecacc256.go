@@ -3,17 +3,16 @@ package account
 import (
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
 
-// const privKey = "PRIVATE_KEY"
-
 var (
-		dir, _ = os.Getwd()
-		ks = keystore.NewKeyStore(
+	dir = helpers.GetCurrDir()
+	ks = keystore.NewKeyStore(
 		dir,
 		keystore.StandardScryptN, 
 		keystore.StandardScryptP,
@@ -29,7 +28,7 @@ type Kecacc256 struct {
 // NewKecacc256 kecacc
 func NewKecacc256(memonic string, existingKeyStore string) (*Kecacc256, error) {
 	acc, err := initAccount(memonic, existingKeyStore)
-	
+
 	if err != nil {
 		return nil, err
 	}

@@ -4,19 +4,17 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
 	// mage:import
+	_ "github.com/loic-roux-404/crypto-bots/build/mage/release"
+	// mage:import
 	"github.com/loic-roux-404/crypto-bots/build/mage/solidity"
-	"github.com/loic-roux-404/crypto-bots/internal/system"
-	"github.com/thoas/go-funk"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
 
 const (
@@ -27,7 +25,8 @@ var (
 	ports      = []string{"4205"}
 	cmds       = []string{"sniper"}
 	goexe      = "go"
-	currentDir = system.GetCurrDir()
+	currentDir = helpers.GetCurrDir()
+	binDir, _ = filepath.Abs(filepath.Join(".", "bin"))
 )
 
 var toolsCmds = []string{
@@ -59,7 +58,7 @@ var Default = All
 
 type Build mg.Namespace
 
-// Runs go mod download and then installs the binary.
+// All Build all modules
 func All() error {
 	b := new(Build)
 
@@ -91,48 +90,16 @@ func (Build) Web() error {
 	return nil
 }
 
-const (
-	BUILD = "build"
-	RUN   = "run"
-)
-
-var mode = BUILD
+var cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
 
 // Runs go mod download and then installs the binary.
 func (Build) Cmds(name string) error {
-	if len(name) > 0 {
-		cmds = funk.Filter(cmds, func(x string) bool {
-			return x == name
-		}).([]string)
-	}
-
-	for _, c := range cmds {
-		finalc := cmd.ToLocalCmd("cmd/bot", c)
-		// Default to verbose in run (dev) mode
-		dest := "-v"
-
-		if mode == BUILD {
-			dest = filepath.Join(".", "bin", c)
-			fmt.Printf("Building %s in %s...", finalc, dest)
-			dest = fmt.Sprintf("-o %s", dest)
-		}
-
-		err := sh.Run(goexe, mode, dest, finalc)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return cmdCompiler.GoexeCmd(name)
 }
 
 // CmdsRun dev command
-func (b Build) CmdsRun(name string) error {
-	mode = RUN
-	err := b.Cmds(name)
-	mode = BUILD
-
-	return err
+func (Build) CmdsRun(name string) error {
+	return cmdCompiler.GoexeRun(name)
 }
 
 type Test mg.Namespace
@@ -163,32 +130,6 @@ func (t Test) Cmds() error {
 	}
 
 	return nil
-}
-
-type Release mg.Namespace
-
-const (
-	semverExe = "semantic-release"
-)
-
-var semverFlags = []string{
-	"allow-initial-development-versions",
-	"download-plugins",
-}
-
-// Release semantic release
-func (Release) SemRelease(prerelease bool, noCi bool) error {
-	if prerelease {
-		semverFlags = append(semverFlags, "prerelease")
-	}
-
-	if noCi {
-		semverFlags = append(semverFlags, "no-ci")
-	}
-
-	finalFlags := strings.Split(strings.Join(semverFlags, " --"), " ")
-
-	return sh.Run("semantic-release", finalFlags...)
 }
 
 type Deploy mg.Namespace

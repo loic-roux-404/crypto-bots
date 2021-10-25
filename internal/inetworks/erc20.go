@@ -2,56 +2,53 @@ package inetworks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
-	"os"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/loic-roux-404/crypto-bots/internal/services"
+	"github.com/spf13/viper"
 
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
-	arg "github.com/alexflint/go-arg"
 )
 
-const netName = "eth"
-
-var args struct {
-	gasLimit int64 `default:"91"`
-	gasPrice int64 `default:"9"`
-	memonic  string `arg:"required"`
-	keystore string `default:"default_keystore.json"`
-	ipc 	 string `default:"https://eth-ropsten.alchemyapi.io/v2/xxBP5S83g-JC_P4sy7tw_7bjkF1UESko"`
-}
+const (
+	netName = "eth"
+	defaultNode = "ropsten"
+)
 
 // Config of etherul handler
-type config struct {
-	gasLimit *big.Int
-	gasPrice *big.Int 
-	memonic  string
-	keystore string
-	ipc 	 string
+type netCnf struct {
+	GasLimit int64 `mapstructure:"gasLimit"`
+	GasPrice int64 `mapstructure:"gasPrice"`
+	Memonic  string `mapstructure:"MEMONIC"`
+	Keystore string `mapstructure:"keystore"`
+	Ipc 	 string `mapstructure:"ipc"`
 }
 
 // NewConf of erc handler
-func newConf() (*config, error)  {
-	arg.MustParse(&args)
-	var (
-		gasLimit = big.NewInt(args.gasLimit)
-		gasPrice = big.NewInt(args.gasPrice)
-		memonic = args.memonic
-		keystore = args.keystore
-		ipc = args.ipc
-	)
+func newConf() (*netCnf, error)  {
 
-	if (ipc == "") {
-		return nil, fmt.Errorf("No IPC url configured")
+	if len(viper.GetString("network")) <= 0 {
+		viper.Set("network", defaultNode) 
 	}
 
-	cnf := &config{gasLimit, gasPrice, ipc, memonic, keystore}
+	var cnfLocations = map[string]string{
+		"network": viper.GetString("network"),
+	}
+
+	cnf := &netCnf{}
+	services.GetCnf(cnf, cnfLocations)
+
+	if cnf.Ipc == "" {
+		return nil, errors.New("No IPC url configured")
+	}
 
 	return cnf, nil
 }
@@ -61,29 +58,26 @@ type ErcHandler struct {
 	name string
 	client *ethclient.Client
 	kecacc *account.Kecacc256
-	config *config
+	config *netCnf
 }
 
 // NewEth create etherum handler
-func NewEth() Network {
+func NewEth() (Network, error) {
 	cnf, err := newConf(); if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
-	log.Printf("Connecting to %s...", cnf.ipc)
-	conn, err := ethclient.Dial(cnf.ipc)
+	log.Printf("Connecting to %s...", cnf.Ipc)
+	conn, err := ethclient.Dial(cnf.Ipc)
 
 	if err != nil {
-		log.Panicf("Failed to connect to the Ethereum client: %v", err)
+		return nil, fmt.Errorf("Failed to connect to the Ethereum client: %v", err)
 	}
 
-	acc, err := account.NewKecacc256(
-		os.Getenv("WALLET_MEMONIC"), 
-		os.Getenv("WALLET_EXISTING_KEYSTORE"),
-	)
+	acc, err := account.NewKecacc256(cnf.Memonic, cnf.Keystore)
 
 	if (err != nil) {
-		log.Panicf("Failed to init wallet: %v", err)
+		return nil, fmt.Errorf("Failed to init wallet: %v", err)
 	}
 
 	return &ErcHandler{
@@ -91,7 +85,7 @@ func NewEth() Network {
 		kecacc: acc,
 		client: conn, 
 		config: cnf,
-	}
+	}, nil
 }
 
 // Send transaction to address
@@ -154,7 +148,7 @@ func (e *ErcHandler) estimateGas(address common.Address) error {
 	gasLimit := int64(float64(estimatedGas) * 1.30)
 	fmt.Println(gasLimit) // 27305
 
-	e.config.gasLimit.Set(big.NewInt(gasLimit))
+	e.config.GasLimit = gasLimit
 
 	return nil
 }
@@ -198,8 +192,8 @@ func (e *ErcHandler) createTx(
 			nonce.Uint64(),
 			finalAddress, 
 			amount,
-			e.config.gasLimit.Uint64(),
-			e.config.gasPrice,
+			big.NewInt(e.config.GasLimit).Uint64(),
+			big.NewInt(e.config.GasPrice),
 			data,
 		)
 

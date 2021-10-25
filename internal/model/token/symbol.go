@@ -9,12 +9,12 @@ type Pair struct{
 }
 
 // NewSymbol func
-func NewSymbol(buy string, sell string) *Pair{
-	return &Pair{buy: buy, sell: sell}
+func NewSymbol(buy string, sell string) Pair{
+	return Pair{buy: buy, sell: sell}
 }
 
 // NewBtcPair generate pair with BTC
-func NewBtcPair(symbol string) *Pair {
+func NewBtcPair(symbol string) Pair {
 	return NewSymbol(symbol, "BTC")
 }
 

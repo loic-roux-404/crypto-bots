@@ -6,7 +6,7 @@ import (
 
 	"github.com/magefile/mage/sh"
 
-	"github.com/loic-roux-404/crypto-bots/internal/system"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
 
 // ToFlags transform
@@ -27,7 +27,7 @@ func pkgToCmd(pkg string) string {
 
 // PkgCommandExist in PATH
 func pkgCommandExist(pkg string) bool {
-	return system.CommandExist(pkgToCmd(pkg))
+	return helpers.CommandExist(pkgToCmd(pkg))
 }
 
 // BinInstall install bins

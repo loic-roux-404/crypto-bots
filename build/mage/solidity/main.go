@@ -7,7 +7,7 @@ import (
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 
-	"github.com/loic-roux-404/crypto-bots/internal/system"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
 
 // Solidity mage namespace
@@ -17,11 +17,11 @@ const solSelect = "solc-select"
 
 // Install if missing
 func (Solidity) install(version string) error {
-	if system.CommandExist(solSelect) {
+	if helpers.CommandExist(solSelect) {
 		return nil
 	}
 
-	if system.CommandExist("python3") || system.CommandExist("python") {
+	if helpers.CommandExist("python3") || helpers.CommandExist("python") {
 		return fmt.Errorf("Missing python3, install it to use solidity")
 	}
 
