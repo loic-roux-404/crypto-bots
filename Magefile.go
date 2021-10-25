@@ -4,19 +4,17 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
 	// mage:import
+	_ "github.com/loic-roux-404/crypto-bots/build/mage/release"
+	// mage:import
 	"github.com/loic-roux-404/crypto-bots/build/mage/solidity"
-	"github.com/loic-roux-404/crypto-bots/internal/system"
-	"github.com/thoas/go-funk"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
 
 const (
@@ -24,10 +22,11 @@ const (
 )
 
 var (
-	ports = []string{"4205"}
-	cmds  = []string{"sniper"}
-	goexe = "go"
-	currentDir = system.GetCurrDir()
+	ports      = []string{"4205"}
+	cmds       = []string{"sniper"}
+	goexe      = "go"
+	currentDir = helpers.GetCurrDir()
+	binDir, _ = filepath.Abs(filepath.Join(".", "bin"))
 )
 
 var toolsCmds = []string{
@@ -48,7 +47,9 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds); if err != nil {
+	err := cmd.BinInstall(toolsCmds)
+
+	if err != nil {
 		panic(err)
 	}
 }
@@ -57,111 +58,78 @@ var Default = All
 
 type Build mg.Namespace
 
-// Runs go mod download and then installs the binary.
+// All Build all modules
 func All() error {
 	b := new(Build)
 
-	err := b.Cmds(""); if err != nil {
+	err := b.Cmds("")
+	if err != nil {
 		return err
 	}
 
-	err = b.Api(); if err != nil {
+	err = b.Api()
+	if err != nil {
 		return err
 	}
 
-	err = b.Web(); if err != nil {
+	err = b.Web()
+	if err != nil {
 		return err
-	}
-
-    return nil
-}
-
-// Runs go mod download and then installs the binary.
-func (Build) Api() error {
-    return nil
-}
-
-// Runs go mod download and then installs the binary.
-func (Build) Web() error {
-    return nil
-}
-
-// Runs go mod download and then installs the binary.
-func (Build) Cmds(name string) error {
-
-	if len(name) > 0 {
-		cmds = funk.Filter(cmds, func(x string) bool {
-			return x == name
-		}).([]string)
-	}	
-
-	for _, c := range cmds {
-		finalc := cmd.ToLocalCmd("cmd/bot", c)
-		dest := filepath.Join(".", "bin", c)
-		fmt.Printf("Building %s... in %s", finalc, dest)
-
-		err := sh.Run(goexe, "build", "-o", dest, finalc); if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
+// Runs go mod download and then installs the binary.
+func (Build) Api() error {
+	return nil
+}
+
+// Runs go mod download and then installs the binary.
+func (Build) Web() error {
+	return nil
+}
+
+var cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+
+// Runs go mod download and then installs the binary.
+func (Build) Cmds(name string) error {
+	return cmdCompiler.GoexeCmd(name)
+}
+
+// CmdsRun dev command
+func (Build) CmdsRun(name string) error {
+	return cmdCompiler.GoexeRun(name)
+}
+
 type Test mg.Namespace
 
 var (
-	mockLoc = filepath.Join(".", "tests", "mocks")
+	mockLoc  = filepath.Join(".", "tests", "mocks")
 	mockDest = filepath.Join(mockLoc, "data")
 	mockName = "glitch"
 )
 
 // Runs go mod download and then installs the binary.
 func (Test) Api() error {
-    return nil
+	return nil
 }
 
 // Web Test
 // Runs go mod download and then installs the binary.
 // e2e test TODO (k6) ?
 func (Test) Web() error {
-    return nil
+	return nil
 }
 
 // Runs go mod download and then installs the binary.
 func (t Test) Cmds() error {
 	s := new(solidity.Solidity)
-	if err := s.Compile(mockLoc, mockName, mockDest); err != nil{
+	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-type Release mg.Namespace
-
-const (
-    semverExe = "semantic-release"
-)
-
-var semverFlags = []string{
-	"allow-initial-development-versions",
-	"download-plugins",
-}
-
-// Release semantic release
-func (Release) SemRelease(prerelease bool, noCi bool) error {
-    if (prerelease) {
-        semverFlags = append(semverFlags, "prerelease")
-    }
-
-    if (noCi) {
-        semverFlags = append(semverFlags, "no-ci")
-    }
-
-    finalFlags := strings.Split(strings.Join(semverFlags, " --"), " ")
-
-	return sh.Run("semantic-release", finalFlags...)
 }
 
 type Deploy mg.Namespace
