@@ -8,7 +8,7 @@ import (
 )
 
 var nets = helpers.Map{
-	"eth": inetworks.NewEth,
+	inetworks.ErcNetName: inetworks.NewEth,
 }
 
 // GetNetwork in map

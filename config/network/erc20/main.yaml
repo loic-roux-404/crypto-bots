@@ -1,0 +1,4 @@
+ipc: "" # TODO
+chainid: 1
+gasLimit: 21000
+gasPrice: 8
