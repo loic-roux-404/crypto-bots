@@ -169,6 +169,7 @@ func (e *ErcHandler) createTx(
 		return tx, nil
 }
 
+// TODO add checking regex for smart contract or address
 func valAndGetAddress(address string) common.Address {
 	// prepare transaction requirements
 	finalAddress := common.HexToAddress(address)
