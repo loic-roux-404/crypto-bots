@@ -10,6 +10,7 @@ import (
 
 // ERCConfig of etherum like blockchain
 type ERCConfig struct {
+	ManualFee bool `mapstructure:"manualFee"`
 	GasLimit int64 `mapstructure:"gasLimit"`
 	GasPrice int64 `mapstructure:"gasPrice"`
 	Memonic  string `mapstructure:"MEMONIC"`

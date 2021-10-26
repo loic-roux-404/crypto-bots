@@ -11,7 +11,6 @@ import (
 
 // GetCnf get config struct
 func GetCnf(c interface{}, files map[string]string) {
-	
 	for folder, name := range files {
 		log.Printf("Loading config %s/%s", folder, name)
 		err := InitFiles(folder, name)

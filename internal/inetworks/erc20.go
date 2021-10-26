@@ -75,14 +75,14 @@ func (e *ErcHandler) Send(
 	)
 
 	if err != nil {
-		log.Panic(err)
+		return (common.Hash)([common.HashLength]byte{0}), err
 	}
 
 	// Send the transaction
 	err = e.client.SendTransaction(context.Background(), signTx)
 
 	if err != nil {
-		log.Panic(err)
+		return (common.Hash)([common.HashLength]byte{0}), err
 	}
 
 	// Obtain transaction hash as a string
@@ -105,6 +105,10 @@ func (e *ErcHandler) Send(
 // }
 
 func (e *ErcHandler) estimateGas(address common.Address) error {
+	if e.config.ManualFee {
+		return nil
+	}
+
 	estimatedGas, err := e.client.EstimateGas(context.Background(), ethereum.CallMsg{
 		To:   &address,
 		Data: []byte{0},
@@ -114,10 +118,7 @@ func (e *ErcHandler) estimateGas(address common.Address) error {
 		return err
 	}
 
-	gasLimit := int64(float64(estimatedGas) * 1.30)
-	fmt.Println(gasLimit) // 27305
-
-	e.config.GasLimit = gasLimit
+	e.config.GasLimit = int64(estimatedGas)
 
 	return nil
 }

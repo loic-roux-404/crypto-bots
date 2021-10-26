@@ -20,6 +20,9 @@ const (
 	CnfFileID = "config"
 	// CnfFileIDDefault file
 	CnfFileIDDefault = "config.yaml"
+
+	memonicID = "memonic"
+	manualID = "manualFee"
 )
 
 var (
@@ -36,12 +39,14 @@ on a ERC-20 like blockchain or configure a more sophisticated strategy`,
 )
 
 func init() {
+	// User Configuration
 	sniperCmd.PersistentFlags().StringVar(
 		&cfgFile,
 		CnfFileID,
 		CnfFileIDDefault,
 		fmt.Sprintf("user config file (default is %s)", CnfFileIDDefault),
 	)
+	// Network choice
 	sniperCmd.PersistentFlags().StringP(
 		net.NetCnfID,
 		"n",
@@ -49,6 +54,17 @@ func init() {
 		"ERC_20 like network id to load, default depending of chain type",
 	)
 	viper.BindPFlag(net.NetCnfID, sniperCmd.PersistentFlags().Lookup(net.NetCnfID))
+	// Memonic
+	sniperCmd.PersistentFlags().StringP(
+		memonicID,
+		"m",
+		"",
+		"Seed phrase (12 words)",
+	)
+	viper.BindPFlag(memonicID, sniperCmd.PersistentFlags().Lookup(memonicID))
+	// Auto gas
+	sniperCmd.PersistentFlags().Bool(manualID, false, "Disable automatic gas estimation")
+	viper.BindPFlag(manualID, sniperCmd.PersistentFlags().Lookup(manualID))
 }
 
 func main() {
@@ -59,5 +75,11 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
-	n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", token.NewBtcPair("ETH"), big.NewInt(1))
+	h, err := n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", token.NewBtcPair("ETH"), big.NewInt(1))
+
+	if err != nil {
+		log.Printf("Error: %s", err)
+	} else {
+		log.Printf("Sucessfuly sent tx: %s", h)
+	}
 }

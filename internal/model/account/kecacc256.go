@@ -1,6 +1,7 @@
 package account
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -24,12 +25,23 @@ type Kecacc256 struct {
 
 // NewKecacc256 kecacc
 func NewKecacc256(memonic string, wantedAcc string) (*Kecacc256, error) {
+	if len(memonic) <= 0 {
+		return nil, fmt.Errorf("Missing a memonic")
+	}
+
 	ks := keystore.NewKeyStore(
 		dir,
 		keystore.StandardScryptN,
 		keystore.StandardScryptP,
 	)
+
 	acc, err := initAccount(ks, memonic, wantedAcc)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = ks.Unlock(acc, memonic)
 
 	if err != nil {
 		return nil, err
