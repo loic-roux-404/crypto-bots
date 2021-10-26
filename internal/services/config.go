@@ -5,13 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/spf13/viper"
 )
 
 // GetCnf get config struct
 func GetCnf(c interface{}, files map[string]string) {
-	
 	for folder, name := range files {
 		log.Printf("Loading config %s/%s", folder, name)
 		err := InitFiles(folder, name)
@@ -43,10 +41,11 @@ func InitFiles(folder string, name string) error {
 
 // InitEnv parse secured env vars
 func InitEnv() {
-	viper.SetEnvPrefix("CBOTS")
+	wd, _ := os.Getwd()
+	viper.SetEnvPrefix("cbots")
+	viper.AddConfigPath(wd)
 	viper.SetConfigName("")
 	viper.SetConfigType("env")
-	viper.AddConfigPath(helpers.GetCurrDir())
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()

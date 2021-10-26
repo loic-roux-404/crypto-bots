@@ -58,10 +58,15 @@ func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) erro
 	}
 
 	return sh.Run(
-		"abigen", 
-		fmt.Sprint("--bin=", pcv2Bin), 
-		fmt.Sprint("--abi=", pcv2Abi), 
+		"abigen",
+		fmt.Sprint("--bin=", pcv2Bin),
+		fmt.Sprint("--abi=", pcv2Abi),
 		fmt.Sprint("--pkg=", mockDest),
 		fmt.Sprint("--out=", fmt.Sprintf("%s.go", mockName)),
 	)
+}
+
+// Deploy a smart contract
+func (s Solidity) Deploy(src string) error {
+	return nil
 }

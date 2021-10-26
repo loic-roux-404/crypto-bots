@@ -80,19 +80,19 @@ func All() error {
 	return nil
 }
 
-// Runs go mod download and then installs the binary.
+// Api build protobuf files
 func (Build) Api() error {
 	return nil
 }
 
-// Runs go mod download and then installs the binary.
+// Web interface build
 func (Build) Web() error {
 	return nil
 }
 
 var cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
 
-// Runs go mod download and then installs the binary.
+// Cmds build all CLI
 func (Build) Cmds(name string) error {
 	return cmdCompiler.GoexeCmd(name)
 }
