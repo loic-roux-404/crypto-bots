@@ -81,3 +81,8 @@ DEX :
 ### Development
 
 Used : `https://github.com/thoas/go-funk`
+
+### Testnets
+
+- Bsc : `https://admin.moralis.io/`
+- Eth : alchemy

@@ -2,7 +2,6 @@ package inetworks
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -11,59 +10,29 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/loic-roux-404/crypto-bots/internal/services"
-	"github.com/spf13/viper"
 
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
+	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
 
 const (
-	netName = "eth"
+	// ErcNetName identifier
+	ErcNetName = "erc20"
 	defaultNode = "ropsten"
 )
-
-// Config of etherul handler
-type netCnf struct {
-	GasLimit int64 `mapstructure:"gasLimit"`
-	GasPrice int64 `mapstructure:"gasPrice"`
-	Memonic  string `mapstructure:"MEMONIC"`
-	Keystore string `mapstructure:"keystore"`
-	Ipc 	 string `mapstructure:"ipc"`
-}
-
-// NewConf of erc handler
-func newConf() (*netCnf, error)  {
-
-	if len(viper.GetString("network")) <= 0 {
-		viper.Set("network", defaultNode) 
-	}
-
-	var cnfLocations = map[string]string{
-		"network": viper.GetString("network"),
-	}
-
-	cnf := &netCnf{}
-	services.GetCnf(cnf, cnfLocations)
-
-	if cnf.Ipc == "" {
-		return nil, errors.New("No IPC url configured")
-	}
-
-	return cnf, nil
-}
 
 // ErcHandler Handler config
 type ErcHandler struct {
 	name string
 	client *ethclient.Client
 	kecacc *account.Kecacc256
-	config *netCnf
+	config *net.ERCConfig
 }
 
 // NewEth create etherum handler
 func NewEth() (Network, error) {
-	cnf, err := newConf(); if err != nil {
+	cnf, err := net.NewERCConfig(ErcNetName, defaultNode); if err != nil {
 		return nil, err
 	}
 
@@ -81,9 +50,9 @@ func NewEth() (Network, error) {
 	}
 
 	return &ErcHandler{
-		name: netName,
+		name: ErcNetName,
 		kecacc: acc,
-		client: conn, 
+		client: conn,
 		config: cnf,
 	}, nil
 }
@@ -91,8 +60,8 @@ func NewEth() (Network, error) {
 // Send transaction to address
 // Central function which need defer after the call
 func (e *ErcHandler) Send(
-	address string, 
-	pair token.Pair, 
+	address string,
+	pair token.Pair,
 	amount *big.Int,
 ) (hash common.Hash, err error) {
 	// Create new transaction
@@ -144,7 +113,7 @@ func (e *ErcHandler) estimateGas(address common.Address) error {
 	if err != nil {
 		return err
 	}
-	
+
 	gasLimit := int64(float64(estimatedGas) * 1.30)
 	fmt.Println(gasLimit) // 27305
 
@@ -176,9 +145,9 @@ func (e *ErcHandler) createTx(
 		// prepare transaction requirements
 		finalAddress := common.HexToAddress(address)
 		e.estimateGas(finalAddress)
-	
+
 		nonce, err := e.getNonce(finalAddress)
-	
+
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +159,7 @@ func (e *ErcHandler) createTx(
 		// Create new transaction
 		tx := types.NewTransaction(
 			nonce.Uint64(),
-			finalAddress, 
+			finalAddress,
 			amount,
 			big.NewInt(e.config.GasLimit).Uint64(),
 			big.NewInt(e.config.GasPrice),
