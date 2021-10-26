@@ -2,23 +2,33 @@ package net
 
 import (
 	"errors"
+	"math/big"
 	"path/filepath"
 
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/loic-roux-404/crypto-bots/internal/services"
 	"github.com/spf13/viper"
 )
 
 // ERCConfig of etherum like blockchain
 type ERCConfig struct {
-	GasLimit int64 `mapstructure:"gasLimit"`
-	GasPrice int64 `mapstructure:"gasPrice"`
-	Memonic  string `mapstructure:"MEMONIC"`
+	ManualFee bool  `mapstructure:"manualFee"`
+	GasLimit uint64  `mapstructure:"gasLimit"`
+	GasPrice int64  `mapstructure:"gasPrice"`
+	Pass     string `mapstructure:"pass"`
 	Keystore string `mapstructure:"keystore"`
 	Ipc 	 string `mapstructure:"ipc"`
+	ChainID  int64  `mapstructure:"chainid"`
+	FromAccount string `mapstructure:"fromAccount"`
 }
 
 // NetCnfID viper cnf id
 const NetCnfID = "network"
+
+var (
+	// ErrIpcNotConfigured no ipc
+	ErrIpcNotConfigured = errors.New("No IPC url configured")
+)
 
 // NewERCConfig create erc like blockchain handler
 func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error)  {
@@ -39,8 +49,10 @@ func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error)  {
 	// TODO override configs with flags
 
 	if cnf.Ipc == "" {
-		return nil, errors.New("No IPC url configured")
+		return nil, ErrIpcNotConfigured
 	}
+
+	cnf.GasPrice = token.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
 
 	return cnf, nil
 }
