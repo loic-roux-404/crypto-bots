@@ -70,7 +70,9 @@ func importKeyStore(
 	jsonBytes, err := ioutil.ReadFile(file)
 
 	if err == nil {
-		acc, err := ks.Import(jsonBytes, pass, pass); if err != nil {
+		acc, err := ks.Import(jsonBytes, pass, pass)
+
+		if err != keystore.ErrAccountAlreadyExists {
 			log.Printf("Warning: %s", err)
 		}
 

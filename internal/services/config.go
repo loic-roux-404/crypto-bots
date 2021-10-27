@@ -42,7 +42,6 @@ func InitFiles(folder string, name string) error {
 // InitEnv parse secured env vars
 func InitEnv() {
 	wd, _ := os.Getwd()
-	log.Print(wd)
 	viper.SetEnvPrefix("cbots")
 	viper.AddConfigPath(wd)
 	viper.SetConfigName("")

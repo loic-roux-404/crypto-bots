@@ -95,7 +95,7 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
-	h, err := n.Send("0xE216378C0ed702D66e09D4aDBE9548C52604eB6E", big.NewFloat(0.02))
+	h, err := n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
 
 	if err != nil {
 		log.Printf("Error: %s", err)
