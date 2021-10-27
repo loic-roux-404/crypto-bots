@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/spf13/viper"
 )
 
@@ -42,10 +41,12 @@ func InitFiles(folder string, name string) error {
 
 // InitEnv parse secured env vars
 func InitEnv() {
-	viper.SetEnvPrefix("CBOTS")
+	wd, _ := os.Getwd()
+	log.Print(wd)
+	viper.SetEnvPrefix("cbots")
+	viper.AddConfigPath(wd)
 	viper.SetConfigName("")
 	viper.SetConfigType("env")
-	viper.AddConfigPath(helpers.GetCurrDir())
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()

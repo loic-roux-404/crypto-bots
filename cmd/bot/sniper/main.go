@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/loic-roux-404/crypto-bots/pkg/networks"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 )
 
@@ -20,15 +19,16 @@ const (
 	CnfFileID = "config"
 	// CnfFileIDDefault file
 	CnfFileIDDefault = "config.yaml"
-
-	memonicID = "memonic"
+	// Flags
+	keystoreID = "keystore"
 	manualID = "manualFee"
+	chainid = "chainid"
+	pass = "pass"
 )
 
 var (
-	// Used for flags.
-	// network string
-	cfgFile string
+	// CfgFile location
+	CfgFile string
 
 	sniperCmd = &cobra.Command{
 		Use:   "sniper",
@@ -41,7 +41,7 @@ on a ERC-20 like blockchain or configure a more sophisticated strategy`,
 func init() {
 	// User Configuration
 	sniperCmd.PersistentFlags().StringVar(
-		&cfgFile,
+		&CfgFile,
 		CnfFileID,
 		CnfFileIDDefault,
 		fmt.Sprintf("user config file (default is %s)", CnfFileIDDefault),
@@ -54,17 +54,37 @@ func init() {
 		"ERC_20 like network id to load, default depending of chain type",
 	)
 	viper.BindPFlag(net.NetCnfID, sniperCmd.PersistentFlags().Lookup(net.NetCnfID))
-	// Memonic
+	// Keystorefile location
 	sniperCmd.PersistentFlags().StringP(
-		memonicID,
+		keystoreID,
 		"m",
 		"",
-		"Seed phrase (12 words)",
+		"Keystore location, json format file storing encrypted keys. create it from metamask",
 	)
-	viper.BindPFlag(memonicID, sniperCmd.PersistentFlags().Lookup(memonicID))
+	sniperCmd.MarkPersistentFlagRequired(keystoreID)
+	viper.BindPFlag(keystoreID, sniperCmd.PersistentFlags().Lookup(keystoreID))
 	// Auto gas
 	sniperCmd.PersistentFlags().Bool(manualID, false, "Disable automatic gas estimation")
 	viper.BindPFlag(manualID, sniperCmd.PersistentFlags().Lookup(manualID))
+	// Chainid
+	sniperCmd.PersistentFlags().Int16P(
+		chainid,
+		"i",
+		3,
+		"Chain id",
+	)
+	sniperCmd.MarkPersistentFlagRequired(chainid)
+	viper.BindPFlag(chainid, sniperCmd.PersistentFlags().Lookup(chainid))
+	// Account password
+	sniperCmd.PersistentFlags().StringP(
+		pass,
+		"p",
+		"",
+		"Account Password",
+	)
+	sniperCmd.MarkPersistentFlagRequired(pass)
+	viper.BindPFlag(pass, sniperCmd.PersistentFlags().Lookup(pass))
+
 }
 
 func main() {
@@ -75,7 +95,7 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
-	h, err := n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", token.NewBtcPair("ETH"), big.NewInt(1))
+	h, err := n.Send("0xE216378C0ed702D66e09D4aDBE9548C52604eB6E", big.NewFloat(0.02))
 
 	if err != nil {
 		log.Printf("Error: %s", err)

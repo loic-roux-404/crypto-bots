@@ -2,4 +2,4 @@ ipc: "https://eth-ropsten.alchemyapi.io/v2/xxBP5S83g-JC_P4sy7tw_7bjkF1UESko"
 chainid: 3
 keystore: wallets/default_keystore_ropsten.json
 gasLimit: 21000
-gasPrice: 8
+gasPrice: 3

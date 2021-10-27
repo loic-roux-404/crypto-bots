@@ -24,9 +24,9 @@ type Kecacc256 struct {
 }
 
 // NewKecacc256 kecacc
-func NewKecacc256(memonic string, wantedAcc string) (*Kecacc256, error) {
-	if len(memonic) <= 0 {
-		return nil, fmt.Errorf("Missing a memonic")
+func NewKecacc256(pass string, wantedAcc string) (*Kecacc256, error) {
+	if len(pass) <= 0 {
+		return nil, fmt.Errorf("Missing a password")
 	}
 
 	ks := keystore.NewKeyStore(
@@ -35,55 +35,52 @@ func NewKecacc256(memonic string, wantedAcc string) (*Kecacc256, error) {
 		keystore.StandardScryptP,
 	)
 
-	acc, err := initAccount(ks, memonic, wantedAcc)
+	acc, err := initAccount(ks, pass, wantedAcc)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = ks.Unlock(acc, memonic)
+	err = ks.Unlock(acc, pass)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Kecacc256{
-		store: ks,
-		currentAccount: acc,
-	}, nil
+	return &Kecacc256{store: ks, currentAccount: acc}, nil
 }
 
 func initAccount(
 	ks *keystore.KeyStore,
-	memonic string,
+	pass string,
 	wantedAcc string,
 ) (accounts.Account, error) {
 	if wantedAcc == "" {
-		return ks.NewAccount(memonic)
+		return ks.NewAccount(pass)
 	}
 
-	return importKeyStore(ks, wantedAcc, memonic)
+	return importKeyStore(ks, wantedAcc, pass)
 }
 
 func importKeyStore(
 	ks *keystore.KeyStore,
 	file string,
-	memonic string,
+	pass string,
 ) (accounts.Account, error) {
 	jsonBytes, err := ioutil.ReadFile(file)
 
 	if err == nil {
-		acc, err := ks.Import(jsonBytes, memonic, memonic); if err != nil {
-			log.Printf("Warn: %s", err)
+		acc, err := ks.Import(jsonBytes, pass, pass); if err != nil {
+			log.Printf("Warning: %s", err)
 		}
 
 		return acc, nil
 	}
 
-	log.Printf("Warn: %s", err)
+	log.Printf("Warning: %s", err)
 	log.Printf("Creating keystore: %s", file)
 
-	acc, err := ks.NewAccount(memonic); if err != nil {
+	acc, err := ks.NewAccount(pass); if err != nil {
 		log.Panicf("Error creating account: %s", err)
 	}
 

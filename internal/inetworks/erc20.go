@@ -2,6 +2,7 @@ package inetworks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/big"
@@ -11,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
@@ -43,7 +45,7 @@ func NewEth() (Network, error) {
 		return nil, fmt.Errorf("Failed to connect to the Ethereum client: %v", err)
 	}
 
-	acc, err := account.NewKecacc256(cnf.Memonic, cnf.Keystore)
+	acc, err := account.NewKecacc256(cnf.Pass, cnf.Keystore)
 
 	if (err != nil) {
 		return nil, fmt.Errorf("Failed to init wallet: %v", err)
@@ -61,8 +63,7 @@ func NewEth() (Network, error) {
 // Central function which need defer after the call
 func (e *ErcHandler) Send(
 	address string,
-	pair token.Pair,
-	amount *big.Int,
+	amount *big.Float,
 ) (hash common.Hash, err error) {
 	// Create new transaction
 	tx, err := e.createTx(address, amount, nil)
@@ -71,7 +72,7 @@ func (e *ErcHandler) Send(
 	signTx, err := e.kecacc.Store().SignTx(
 		e.kecacc.Account(),
 		tx,
-		big.NewInt(3),
+		big.NewInt(e.config.ChainID),
 	)
 
 	if err != nil {
@@ -79,6 +80,7 @@ func (e *ErcHandler) Send(
 	}
 
 	// Send the transaction
+	log.Printf("Sending transaction on chain : %d", e.config.ChainID)
 	err = e.client.SendTransaction(context.Background(), signTx)
 
 	if err != nil {
@@ -123,12 +125,12 @@ func (e *ErcHandler) estimateGas(address common.Address) error {
 	return nil
 }
 
-func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
+func (e *ErcHandler) getNonce() (*big.Int, error) {
 	// NonceAt returns the account nonce of the given account.
 	// nonce, err := client.NonceAt(ctx, address, nil)
-
+	a := e.kecacc.Account().Address
 	// This is the nonce that should be used for the next transaction.
-	nonce, err := e.client.PendingNonceAt(context.Background(), address)
+	nonce, err := e.client.PendingNonceAt(context.Background(), a)
 	finalNonce := new(big.Int).SetUint64(nonce)
 
 	if err != nil {
@@ -140,29 +142,42 @@ func (e *ErcHandler) getNonce(address common.Address) (*big.Int, error) {
 
 func (e *ErcHandler) createTx(
 	address string,
-	amount *big.Int,
+	amount *big.Float,
 	data []byte,
 ) (*types.Transaction, error) {
 		// prepare transaction requirements
 		finalAddress := common.HexToAddress(address)
 		e.estimateGas(finalAddress)
 
-		nonce, err := e.getNonce(finalAddress)
+		nonce, err := e.getNonce()
 
 		if err != nil {
 			return nil, err
 		}
 
-		if (data == nil || len(data) > 0) {
+		if (data == nil || len(data) <= 0) {
 			data = []byte{}
 		}
+
+		finalAmount := token.EtherToWei(amount)
+
+		logTx(helpers.Map{
+			"nonce": nonce,
+			"from": e.kecacc.Account().Address,
+			"to": finalAddress,
+			"data": data,
+			"gasLimit": e.config.GasLimit,
+			"gasPrice": e.config.GasPrice,
+			"Wei": finalAmount,
+			"Eth": amount,
+		})
 
 		// Create new transaction
 		tx := types.NewTransaction(
 			nonce.Uint64(),
 			finalAddress,
-			amount,
-			big.NewInt(e.config.GasLimit).Uint64(),
+			finalAmount,
+			uint64(e.config.GasLimit),
 			big.NewInt(e.config.GasPrice),
 			data,
 		)
@@ -176,4 +191,10 @@ func valAndGetAddress(address string) common.Address {
 	finalAddress := common.HexToAddress(address)
 
 	return finalAddress
+}
+
+func logTx(m helpers.Map) {
+	jsonString, _ := json.Marshal(m)
+
+	log.Printf("info: Tx %s", jsonString)
 }
