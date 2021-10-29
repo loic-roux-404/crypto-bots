@@ -33,8 +33,6 @@ var (
 	sniperCmd = &cobra.Command{
 		Use:   "sniper",
 		Short: "Sniping wallet strategy bot",
-		Long: `Use this bot to make simple transaction / contract calls
-on a ERC-20 like blockchain or configure a more sophisticated strategy`,
 	}
 )
 
@@ -95,11 +93,12 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
-	h, err := n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
+	t1, err := n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
+	// t1, err := n.Cancel(big.NewInt(3))
 
 	if err != nil {
 		log.Printf("Error: %s", err)
 	} else {
-		log.Printf("Sucessfuly sent tx: %s", h)
+		log.Printf("Sucessfuly sent tx: %s", t1)
 	}
 }

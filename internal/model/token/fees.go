@@ -19,3 +19,8 @@ func EtherToWei(eth *big.Float) *big.Int {
 
 	return wei;
 }
+
+// GweiToWei conversion
+func GweiToWei(gwei *big.Int) *big.Int {
+	return new(big.Int).Mul(gwei, big.NewInt(params.GWei))
+}

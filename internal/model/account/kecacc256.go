@@ -1,6 +1,7 @@
 package account
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
@@ -23,10 +25,17 @@ type Kecacc256 struct {
 	currentAccount accounts.Account
 }
 
+var (
+	errPassMissing = errors.New("Missing a password")
+	errAccCreation = errors.New("Error creating account")
+	errAccNotFound = errors.New("No account in keystore : ")
+)
+
 // NewKecacc256 kecacc
-func NewKecacc256(pass string, wantedAcc string) (*Kecacc256, error) {
+func NewKecacc256(pass string, importKs string, fromAcc string) (*Kecacc256, error) {
+
 	if len(pass) <= 0 {
-		return nil, fmt.Errorf("Missing a password")
+		return nil, errPassMissing
 	}
 
 	ks := keystore.NewKeyStore(
@@ -35,42 +44,59 @@ func NewKecacc256(pass string, wantedAcc string) (*Kecacc256, error) {
 		keystore.StandardScryptP,
 	)
 
-	acc, err := initAccount(ks, pass, wantedAcc)
+	kecacc := &Kecacc256{store: ks, currentAccount: accounts.Account{}}
+
+	err := kecacc.initAccount(pass, importKs)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = ks.Unlock(acc, pass)
+	err = ks.Unlock(kecacc.currentAccount, pass)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Kecacc256{store: ks, currentAccount: acc}, nil
-}
-
-func initAccount(
-	ks *keystore.KeyStore,
-	pass string,
-	wantedAcc string,
-) (accounts.Account, error) {
-	if wantedAcc == "" {
-		return ks.NewAccount(pass)
+	if len(fromAcc) > 0 {
+		err = kecacc.changeCurrAcc(fromAcc); if err != nil {
+			return nil, err
+		}
 	}
 
-	return importKeyStore(ks, wantedAcc, pass)
+	return kecacc, nil
 }
 
-func importKeyStore(
-	ks *keystore.KeyStore,
+func (k *Kecacc256) initAccount(pass string, wantedKsFile string) error {
+	if len(wantedKsFile) <= 0 {
+		acc, err := k.store.NewAccount(pass)
+
+		if err != nil {
+			return  err
+		}
+
+		k.currentAccount = acc
+	}
+
+	acc, err := k.addKs(wantedKsFile, pass)
+
+	if err != nil {
+		return err
+	}
+
+	k.currentAccount = acc
+
+	return nil
+}
+
+func (k *Kecacc256) addKs(
 	file string,
 	pass string,
 ) (accounts.Account, error) {
 	jsonBytes, err := ioutil.ReadFile(file)
 
 	if err == nil {
-		acc, err := ks.Import(jsonBytes, pass, pass)
+		acc, err := k.store.Import(jsonBytes, pass, pass)
 
 		if err != keystore.ErrAccountAlreadyExists {
 			log.Printf("Warning: %s", err)
@@ -82,13 +108,33 @@ func importKeyStore(
 	log.Printf("Warning: %s", err)
 	log.Printf("Creating keystore: %s", file)
 
-	acc, err := ks.NewAccount(pass); if err != nil {
-		log.Panicf("Error creating account: %s", err)
+	acc, err := k.store.NewAccount(pass); if err != nil {
+		log.Panic(errAccCreation.Error(), err)
 	}
 
 	os.Rename(acc.URL.Path, filepath.Join(".", file))
 
 	return acc, nil
+}
+
+func (k *Kecacc256) changeCurrAcc(address string) error {
+	// Create account definitions
+	fromAccDef := accounts.Account{
+		Address: common.HexToAddress(address),
+	}
+
+	if ValidateAddress(fromAccDef) {
+		return fmt.Errorf("%s : %s", ErrInvalid, address)
+	}
+
+	// Find the signing account
+	signAcc, err := k.store.Find(fromAccDef); if err == nil {
+		k.currentAccount = signAcc
+	} else {
+		return fmt.Errorf("%s %s", errAccNotFound, address)
+	}
+
+	return nil
 }
 
 // Account initialized

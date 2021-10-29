@@ -2,8 +2,10 @@ package net
 
 import (
 	"errors"
+	"math/big"
 	"path/filepath"
 
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/loic-roux-404/crypto-bots/internal/services"
 	"github.com/spf13/viper"
 )
@@ -11,13 +13,13 @@ import (
 // ERCConfig of etherum like blockchain
 type ERCConfig struct {
 	ManualFee bool  `mapstructure:"manualFee"`
-	GasLimit int64  `mapstructure:"gasLimit"`
+	GasLimit uint64  `mapstructure:"gasLimit"`
 	GasPrice int64  `mapstructure:"gasPrice"`
 	Pass     string `mapstructure:"pass"`
 	Keystore string `mapstructure:"keystore"`
 	Ipc 	 string `mapstructure:"ipc"`
 	ChainID  int64  `mapstructure:"chainid"`
-
+	FromAccount string `mapstructure:"fromAccount"`
 }
 
 // NetCnfID viper cnf id
@@ -49,6 +51,8 @@ func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error)  {
 	if cnf.Ipc == "" {
 		return nil, ErrIpcNotConfigured
 	}
+
+	cnf.GasPrice = token.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
 
 	return cnf, nil
 }
