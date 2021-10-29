@@ -4,17 +4,24 @@
 
 ## Features
 
-- Listing of twitter exchange messages (WIP)
-- Pump and dump telegram groups (WIP)
-- [ ] Scalping
+#### Chain related
+
 - ERC-20 sniper bot main :
     - [x] Send
     - [ ] Cancel
     - [ ] Update tx
     - [ ] Call sc
+    - [ ] Deploy sc
+    - [ ] Add private key to accounts
     - [ ] wallet (locking by sniping fee funds)
     - [ ] smart contract pair (sell, buy)
 - [ ] Secrets using decentralized secrets store [nucypher](https://www.nucypher.com/)
+
+#### Exchanges related
+
+- [ ] Listing of twitter exchange messages (WIP)
+- [ ] Pump and dump telegram groups (WIP)
+- [ ] Scalping strat (hammingbot ?)
 
 ##### Less prio
 

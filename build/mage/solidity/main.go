@@ -67,6 +67,8 @@ func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) erro
 }
 
 // Deploy a smart contract
-func (s Solidity) Deploy(src string) error {
+func (s Solidity) Deploy(src string, net string) error {
+
+
 	return nil
 }

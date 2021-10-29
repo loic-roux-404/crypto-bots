@@ -154,7 +154,7 @@ func (e *ErcHandler) broadcastTx(signTx *types.Transaction) (common.Hash, error)
 // Sign this transaction with current account
 func (e *ErcHandler) signTx(tx *types.Transaction) (*types.Transaction, error) {
 	// Sign the transaction with private key
-	signTx, err := e.kecacc.Store().SignTx(
+	signTx, err := e.kecacc.Ks().SignTx(
 		e.kecacc.Account(),
 		tx,
 		big.NewInt(e.config.ChainID),
