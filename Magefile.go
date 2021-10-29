@@ -4,6 +4,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -108,6 +109,7 @@ var (
 	mockLoc  = filepath.Join(".", "tests", "mocks")
 	mockDest = filepath.Join(mockLoc, "data")
 	mockName = "glitch"
+	scByNetSet = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
 )
 
 // Runs go mod download and then installs the binary.
@@ -126,6 +128,10 @@ func (Test) Web() error {
 func (t Test) Cmds() error {
 	s := new(solidity.Solidity)
 	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
+		log.Printf("Warn: %v", err)
+	}
+
+	if err := s.PackageByNet(scByNetSet, "contracts"); err != nil {
 		return err
 	}
 

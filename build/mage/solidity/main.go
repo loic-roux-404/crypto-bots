@@ -3,6 +3,7 @@ package solidity
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -18,6 +19,7 @@ const solSelect = "solc-select"
 // Install if missing
 func (Solidity) install(version string) error {
 	if helpers.CommandExist(solSelect) {
+		sh.Run(solSelect, "use", version)
 		return nil
 	}
 
@@ -27,7 +29,7 @@ func (Solidity) install(version string) error {
 
 	sh.Run("pip3", "install", solSelect)
 	sh.Run(solSelect, "install", version)
-	sh.Run(solSelect, "use", solSelect, version)
+	sh.Run(solSelect, "use", version)
 
 	return nil
 }
@@ -66,9 +68,48 @@ func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) erro
 	)
 }
 
-// Deploy a smart contract
-func (s Solidity) Deploy(src string, net string) error {
+// PackageByNet a map of net and contract
+func (s Solidity) PackageByNet(m helpers.Map, pkgDir string) error {
+	var err error = nil
+	for _, sc := range m {
+		folders := strings.Split(sc.(string), "/")
+		pkg, err := filepath.Rel(".", folders[len(folders)-1])
 
+		if err != nil {
+			return err
+		}
+
+		err = s.Package(sc.(string), pkgDir, pkg)
+		if err != nil {
+			return err
+		}
+	}
+
+	defer func() {
+        if recovered := recover(); err != nil {
+            err = recovered.(error)
+        }
+	}()
+
+	return err
+}
+
+// Package smart contract in a go
+func (s Solidity) Package(src string, pkgDir string, pkg string) error {
+	bin := fmt.Sprintf("%s.bin", src)
+	abi := fmt.Sprintf("%s.abi", src)
+	pkgGo := filepath.Join(pkgDir, fmt.Sprintf("%s.go", pkg))
+
+	if err := sh.Run("abigen", "--bin", bin, "--abi", abi, "--pkg", pkgDir, "--out", pkgGo);
+	err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Deploy a smart contract
+func (s Solidity) Deploy() error {
 
 	return nil
 }

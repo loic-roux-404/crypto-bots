@@ -5,3 +5,5 @@
 UTC--*
 /bin/*
 !/bin/.gitkeep
+/contracts/*
+!/contracts/.gitkeep
