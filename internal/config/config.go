@@ -1,4 +1,4 @@
-package services
+package config
 
 import (
 	"log"
@@ -8,14 +8,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-// GetCnf get config struct
-func GetCnf(c interface{}, files map[string]string) {
+// Get get config struct
+func Get(c interface{}, files map[string]string) {
 	for folder, name := range files {
-		log.Printf("Loading config %s/%s", folder, name)
+		log.Printf("Info: Loading config %s/%s", folder, name)
 		err := InitFiles(folder, name)
 
 		if err != nil {
-			log.Printf("Warning: in config %s", err)
+			log.Printf("Warn: config issue %s", err)
 		}
 	}
 

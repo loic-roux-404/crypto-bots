@@ -4,20 +4,21 @@ import (
 	"log"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/inetworks"
+	"github.com/loic-roux-404/crypto-bots/internal/model/net"
+	"github.com/loic-roux-404/crypto-bots/internal/nets/erc20"
 )
 
 var nets = helpers.Map{
-	inetworks.ErcNetName: inetworks.NewEth,
+	erc20.ErcNetName: erc20.NewEth,
 }
 
 // GetNetwork in map
-func GetNetwork(name string) (inetworks.Network, error) {
-    net, err := helpers.GetInMap(nets, name); if err != nil {
+func GetNetwork(name string) (net.Network) {
+    impl, err := helpers.GetInMap(nets, name); if err != nil {
         log.Fatal(err)
 	}
 
-	netFn := net.(func()(inetworks.Network, error))
+	netFn := impl.(func()(net.Network))
 
     return netFn()
 }
