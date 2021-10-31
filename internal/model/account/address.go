@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 
 	"github.com/ethereum/go-ethereum/accounts"
@@ -10,8 +11,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// ErrInvalid invalid
-var ErrInvalid = errors.New("Invalid address")
+// ErrAccInvalid invalid
+var (
+	ErrAccInvalid = errors.New("Invalid public key address")
+	ErrScInvalid = errors.New("Invalid smart contract address")
+)
 
 // ValidateAddress destination
 func ValidateAddress(acc accounts.Account) bool {
@@ -29,8 +33,22 @@ func ValidateSc(client *ethclient.Client, address common.Address) (bool, error) 
 	)
 
 	if err != nil {
-	  return false, err
+	  return false, fmt.Errorf("%s : %s", ErrScInvalid, err)
 	}
 
 	return len(bytecode) > 0, nil
+}
+
+// isErrAddress validate address but return an error if invalid
+func IsErrAddress(address string) error {
+	acc := accounts.Account{
+		Address: common.HexToAddress(address),
+	}
+	isValidAd := ValidateAddress(acc)
+
+	if (isValidAd) {
+		return nil
+	}
+
+	return fmt.Errorf("%s : %s", ErrAccInvalid, address)
 }

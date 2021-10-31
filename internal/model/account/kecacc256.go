@@ -124,7 +124,7 @@ func (k *Kecacc256) changeCurrAcc(address string) error {
 	}
 
 	if ValidateAddress(fromAccDef) {
-		return fmt.Errorf("%s : %s", ErrInvalid, address)
+		return fmt.Errorf("%s : %s", ErrAccInvalid, address)
 	}
 
 	// Find the signing account

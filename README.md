@@ -28,6 +28,7 @@
 - Wallet features
     - [ ] Import account with memonnic using go package btc-util
     - [ ] derivation path account
+    - [ ] Refacto transaction (move to model), create a full flow funciton (create / sign / broadcast)
 
 ##### Tests
 
