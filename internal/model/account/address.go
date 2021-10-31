@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -20,10 +21,10 @@ func ValidateAddress(acc accounts.Account) bool {
 }
 
 // ValidateSc check if it's a smart contract
-func ValidateSc(client ethclient.Client, acc accounts.Account) (bool, error) {
+func ValidateSc(client *ethclient.Client, address common.Address) (bool, error) {
 	bytecode, err := client.CodeAt(
 		context.Background(),
-		acc.Address,
+		address,
 		nil,// nil is latest block
 	)
 

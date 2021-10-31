@@ -63,18 +63,19 @@ type Build mg.Namespace
 func All() error {
 	b := new(Build)
 
-	err := b.Cmds("")
-	if err != nil {
+	err := b.ScPancake(); if err != nil {
 		return err
 	}
 
-	err = b.Api()
-	if err != nil {
+	err = b.Cmds(""); if err != nil {
 		return err
 	}
 
-	err = b.Web()
-	if err != nil {
+	err = b.Api(); if err != nil {
+		return err
+	}
+
+	err = b.Web(); if err != nil {
 		return err
 	}
 
@@ -103,6 +104,20 @@ func (Build) CmdsRun(name string) error {
 	return cmdCompiler.GoexeRun(name)
 }
 
+// ScPancake compile smart contract and generate library
+func (Build) ScPancake() error {
+	s := new(solidity.Solidity)
+	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
+		log.Printf("Warn: %v", err)
+	}
+
+	if err := s.PackageByNet(scByNetSet, "gencontracts"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type Test mg.Namespace
 
 var (
@@ -126,19 +141,15 @@ func (Test) Web() error {
 
 // Runs go mod download and then installs the binary.
 func (t Test) Cmds() error {
-	s := new(solidity.Solidity)
-	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
-		log.Printf("Warn: %v", err)
-	}
-
-	if err := s.PackageByNet(scByNetSet, "contracts"); err != nil {
-		return err
-	}
 
 	return nil
 }
 
 type Deploy mg.Namespace
+
+func (Deploy) ScPancake() error {
+	return nil
+}
 
 // Web ui deploy
 func (Deploy) Web() error {

@@ -85,12 +85,6 @@ func (s Solidity) PackageByNet(m helpers.Map, pkgDir string) error {
 		}
 	}
 
-	defer func() {
-        if recovered := recover(); err != nil {
-            err = recovered.(error)
-        }
-	}()
-
 	return err
 }
 

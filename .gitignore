@@ -5,5 +5,5 @@
 UTC--*
 /bin/*
 !/bin/.gitkeep
-/contracts/*
-!/contracts/.gitkeep
+/gencontracts/*
+!/gencontracts/.gitkeep
