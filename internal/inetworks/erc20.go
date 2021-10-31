@@ -9,7 +9,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -75,12 +74,28 @@ func NewEth() (Network, error) {
 func (e *ErcHandler) Send(
 	address string,
 	amount *big.Float,
-) (hash common.Hash, err error) {
+) (hash common.Hash) {
+	defer helpers.RecoverAndLog()
 	nonce, err := e.getNonce()
-	// Create new transaction
-	tx := e.createTx(address, nonce, amount, nil)
 
-	return e.signAndBroadcast(tx)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create new transaction
+	tx, err := e.createTx(address, nonce, amount, nil)
+
+	if err != nil {
+		panic(err)
+	}
+
+	sentTx, err := e.signAndBroadcast(tx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return sentTx
 }
 
 // Update transaction
@@ -89,29 +104,52 @@ func (e *ErcHandler) Update(
 	nonce *big.Int,
 	address string,
 	amount *big.Float,
-) (hash common.Hash, err error) {
+) (hash common.Hash) {
+	defer helpers.RecoverAndLog()
 	// Create new transaction
-	tx := e.createTx(address, nonce, amount, nil)
+	tx, err := e.createTx(address, nonce, amount, nil)
 
-	return e.signAndBroadcast(tx)
+	if err != nil {
+		panic(err)
+	}
+
+	sentTx, err := e.signAndBroadcast(tx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return sentTx
 }
 
 // Cancel cancel transaction
-func (e *ErcHandler) Cancel(nonce *big.Int) (common.Hash, error) {
-	tx := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
+func (e *ErcHandler) Cancel(nonce *big.Int) (common.Hash) {
+	defer helpers.RecoverAndLog()
+	tx, err := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
 
-	return e.signAndBroadcast(tx)
+	if err != nil {
+		panic(err)
+	}
+
+	sentTx, err := e.signAndBroadcast(tx)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return sentTx
 }
 
-// DeploySc a smart contract api function
-func (e *ErcHandler) DeploySc(
+// Deploy a smart contract api function
+func (e *ErcHandler) Deploy(
 	input string,
 	storeDeployFn store.DeployFn,
-) (*store.Contract, error) {
+) *store.Contract {
+	defer helpers.RecoverAndLog()
 	auth, err := e.getAuth()
 
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 
 	address, tx, instance, err := storeDeployFn(auth, e.client, input)
@@ -119,16 +157,17 @@ func (e *ErcHandler) DeploySc(
 	e.contracts[addressStr] = store.NewContract(address, tx, instance)
 
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 
 	log.Printf("Contract deployed: %s", e.contracts[addressStr].JSON())
 
-	return e.contracts[addressStr], nil
+	return e.contracts[addressStr]
 }
 
-// LoadSc smart contract
-func (e *ErcHandler) LoadSc(address string, loadFn store.LoadFn) *store.Contract {
+// Load a smart contract
+func (e *ErcHandler) Load(address string, loadFn store.LoadFn) *store.Contract {
+	defer helpers.RecoverAndLog()
 	finalAddress := common.HexToAddress(address)
 	isScAddress, err := account.ValidateSc(e.client, common.HexToAddress(address))
 
@@ -137,21 +176,25 @@ func (e *ErcHandler) LoadSc(address string, loadFn store.LoadFn) *store.Contract
 	}
 
 	if !isScAddress || err != nil {
-		log.Panicf("Invalid or imposible to load contract: %s \nError : %s", address, err)
+		panic(fmt.Errorf(store.ErrLoadSc.Error(), address, err))
 	}
 
 	instance, err := loadFn(finalAddress, e.client)
 	e.contracts[address] = store.NewContract(finalAddress, nil, instance)
 
 	if err != nil {
-        log.Panic(err)
+        panic(err)
     }
 
     return e.contracts[address]
 }
 
 func (e *ErcHandler) signAndBroadcast(tx *types.Transaction) (common.Hash, error) {
-	signTx := e.signTx(tx)
+	signTx, err := e.signTx(tx)
+
+	if err != nil {
+		return common.Hash{}, err
+	}
 
 	return e.broadcastTx(signTx)
 }
@@ -164,7 +207,7 @@ func (e *ErcHandler) broadcastTx(signTx *types.Transaction) (common.Hash, error)
 	err := e.client.SendTransaction(context.Background(), signTx)
 
 	if err != nil {
-		log.Panic(err)
+		return common.Hash{}, err
 	}
 
 	// Obtain transaction hash as a string
@@ -172,7 +215,7 @@ func (e *ErcHandler) broadcastTx(signTx *types.Transaction) (common.Hash, error)
 }
 
 // Sign this transaction with current account
-func (e *ErcHandler) signTx(tx *types.Transaction) *types.Transaction {
+func (e *ErcHandler) signTx(tx *types.Transaction) (*types.Transaction, error) {
 	// Sign the transaction with private key
 	signTx, err := e.kecacc.Ks().SignTx(
 		e.kecacc.Account(),
@@ -181,10 +224,10 @@ func (e *ErcHandler) signTx(tx *types.Transaction) *types.Transaction {
 	)
 
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
-	return signTx
+	return signTx, nil
 }
 
 func (e *ErcHandler) setFees(address common.Address) error {
@@ -223,22 +266,32 @@ func (e *ErcHandler) getNonce() (*big.Int, error) {
 	finalNonce := new(big.Int).SetUint64(nonce)
 
 	if err != nil {
-		return nil, fmt.Errorf("%s: %s", errorImpossibleNonce, err)
+		return nil, fmt.Errorf("Error: %s %s", errorImpossibleNonce, err)
 	}
 
 	return finalNonce, nil
 }
 
+// prepare transaction requirements
+// TODO : move it in model/transaction
 func (e *ErcHandler) createTx(
 	address string,
 	nonce *big.Int,
 	amount *big.Float,
 	data []byte,
-) (*types.Transaction) {
-		// prepare transaction requirements
-		panicIfInvalidAddress(address)
+) (*types.Transaction, error) {
+		err := account.IsErrAddress(address)
+
+		if err != nil {
+			return nil, err
+		}
+
 		finalAddress := common.HexToAddress(address)
-		e.setFees(finalAddress)
+		err = e.setFees(finalAddress)
+
+		if err != nil {
+			return nil, err
+		}
 
 		if (data == nil || len(data) <= 0) {
 			data = []byte{}
@@ -267,7 +320,7 @@ func (e *ErcHandler) createTx(
 			data,
 		)
 
-		return tx
+		return tx, nil
 }
 
 func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
@@ -275,15 +328,15 @@ func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
 	auth, err := bind.NewKeyStoreTransactor(e.kecacc.Ks(), acc)
 
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
 	auth.Nonce, err = e.getNonce(); if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
 	err = e.setFees(acc.Address); if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
 	auth.Value = token.EtherToWei(big.NewFloat(0.00))
@@ -293,18 +346,7 @@ func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
 	return auth, nil
 }
 
-func panicIfInvalidAddress(address string) {
-	// prepare transaction requirements
-	acc := accounts.Account{
-		Address: common.HexToAddress(address),
-	}
-	isValidAd := account.ValidateAddress(acc)
-
-	if !isValidAd {
-		log.Panic(account.ErrInvalid.Error())
-	}
-}
-
+// TODO move in model/transaction
 func logTx(m helpers.Map) {
 	jsonString, _ := json.Marshal(m)
 
