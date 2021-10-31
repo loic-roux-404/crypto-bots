@@ -8,8 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/loic-roux-404/crypto-bots/pkg/networks"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
+	"github.com/loic-roux-404/crypto-bots/pkg/networks"
 )
 
 const (
@@ -93,12 +94,8 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
-	t1, err := n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
+	n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
 	// t1, err := n.Cancel(big.NewInt(3))
 
-	if err != nil {
-		log.Printf("Error: %s", err)
-	} else {
-		log.Printf("Sucessfuly sent tx: %s", t1)
-	}
+	defer helpers.RecoverAndLog()
 }
