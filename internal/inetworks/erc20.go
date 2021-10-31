@@ -10,6 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -18,6 +19,7 @@ import (
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/model/store"
 )
 
 const (
@@ -37,6 +39,7 @@ type ErcHandler struct {
 	client *ethclient.Client
 	kecacc *account.Kecacc256
 	config *net.ERCConfig
+	contracts map[string]*store.Contract
 }
 
 // NewEth create etherum handler
@@ -63,6 +66,7 @@ func NewEth() (Network, error) {
 		kecacc: acc,
 		client: conn,
 		config: cnf,
+		contracts: make(map[string]*store.Contract),
 	}, nil
 }
 
@@ -74,11 +78,7 @@ func (e *ErcHandler) Send(
 ) (hash common.Hash, err error) {
 	nonce, err := e.getNonce()
 	// Create new transaction
-	tx, err := e.createTx(address, nonce, amount, nil)
-
-	if err != nil {
-		return getEmptyHash(), err
-	}
+	tx := e.createTx(address, nonce, amount, nil)
 
 	return e.signAndBroadcast(tx)
 }
@@ -91,47 +91,67 @@ func (e *ErcHandler) Update(
 	amount *big.Float,
 ) (hash common.Hash, err error) {
 	// Create new transaction
-	tx, err := e.createTx(address, nonce, amount, nil)
-
-	if err != nil {
-		return getEmptyHash(), err
-	}
+	tx := e.createTx(address, nonce, amount, nil)
 
 	return e.signAndBroadcast(tx)
 }
 
 // Cancel cancel transaction
 func (e *ErcHandler) Cancel(nonce *big.Int) (common.Hash, error) {
-	tx, err := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
-
-	if err != nil {
-		return getEmptyHash(), err
-	}
+	tx := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
 
 	return e.signAndBroadcast(tx)
 }
 
-// TODO follow https://goethereumbook.org/address-check/
-
-// Approve smart contract
-// func (e *ErcHandler) Approve(address string) (hash common.Hash, err error) {
-// 	// TODO address validator
-// 	finalAddress := common.HexToAddress(address)
-// 	return [20]byte{0}, nil
-// }
-
-// // Call smart contract method
-// func (e *ErcHandler) Call(address string) (hash common.Hash, err error) {
-// 	finalAddress := common.HexToAddress(address)
-// 	return []byte{0}, nil
-// }
-
-func (e *ErcHandler) signAndBroadcast(tx *types.Transaction) (common.Hash, error) {
-	signTx, err := e.signTx(tx)
+// DeploySc a smart contract api function
+func (e *ErcHandler) DeploySc(
+	input string,
+	storeDeployFn store.DeployFn,
+) (*store.Contract, error) {
+	auth, err := e.getAuth()
 
 	if err != nil {
-		return getEmptyHash(), err
+		log.Panic(err)
 	}
+
+	address, tx, instance, err := storeDeployFn(auth, e.client, input)
+	addressStr := address.String()
+	e.contracts[addressStr] = store.NewContract(address, tx, instance)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	log.Printf("Contract deployed: %s", e.contracts[addressStr].JSON())
+
+	return e.contracts[addressStr], nil
+}
+
+// LoadSc smart contract
+func (e *ErcHandler) LoadSc(address string, loadFn store.LoadFn) *store.Contract {
+	finalAddress := common.HexToAddress(address)
+	isScAddress, err := account.ValidateSc(e.client, common.HexToAddress(address))
+
+	if value, ok := e.contracts[address]; ok {
+		return value
+	}
+
+	if !isScAddress || err != nil {
+		log.Panicf("Invalid or imposible to load contract: %s \nError : %s", address, err)
+	}
+
+	instance, err := loadFn(finalAddress, e.client)
+	e.contracts[address] = store.NewContract(finalAddress, nil, instance)
+
+	if err != nil {
+        log.Panic(err)
+    }
+
+    return e.contracts[address]
+}
+
+func (e *ErcHandler) signAndBroadcast(tx *types.Transaction) (common.Hash, error) {
+	signTx := e.signTx(tx)
 
 	return e.broadcastTx(signTx)
 }
@@ -144,7 +164,7 @@ func (e *ErcHandler) broadcastTx(signTx *types.Transaction) (common.Hash, error)
 	err := e.client.SendTransaction(context.Background(), signTx)
 
 	if err != nil {
-		return getEmptyHash(), err
+		log.Panic(err)
 	}
 
 	// Obtain transaction hash as a string
@@ -152,19 +172,19 @@ func (e *ErcHandler) broadcastTx(signTx *types.Transaction) (common.Hash, error)
 }
 
 // Sign this transaction with current account
-func (e *ErcHandler) signTx(tx *types.Transaction) (*types.Transaction, error) {
+func (e *ErcHandler) signTx(tx *types.Transaction) *types.Transaction {
 	// Sign the transaction with private key
-	signTx, err := e.kecacc.Store().SignTx(
+	signTx, err := e.kecacc.Ks().SignTx(
 		e.kecacc.Account(),
 		tx,
 		big.NewInt(e.config.ChainID),
 	)
 
 	if err != nil {
-		return nil, err
+		log.Panic(err)
 	}
 
-	return signTx, nil
+	return signTx
 }
 
 func (e *ErcHandler) setFees(address common.Address) error {
@@ -214,7 +234,7 @@ func (e *ErcHandler) createTx(
 	nonce *big.Int,
 	amount *big.Float,
 	data []byte,
-) (*types.Transaction, error) {
+) (*types.Transaction) {
 		// prepare transaction requirements
 		panicIfInvalidAddress(address)
 		finalAddress := common.HexToAddress(address)
@@ -247,7 +267,30 @@ func (e *ErcHandler) createTx(
 			data,
 		)
 
-		return tx, nil
+		return tx
+}
+
+func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
+	acc := e.kecacc.Account()
+	auth, err := bind.NewKeyStoreTransactor(e.kecacc.Ks(), acc)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	auth.Nonce, err = e.getNonce(); if err != nil {
+		log.Panic(err)
+	}
+
+	err = e.setFees(acc.Address); if err != nil {
+		log.Panic(err)
+	}
+
+	auth.Value = token.EtherToWei(big.NewFloat(0.00))
+	auth.GasLimit = e.config.GasLimit
+	auth.GasPrice = big.NewInt(e.config.GasPrice)
+
+	return auth, nil
 }
 
 func panicIfInvalidAddress(address string) {
