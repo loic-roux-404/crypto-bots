@@ -25,7 +25,10 @@ type LoadFn func(...interface{})(bind.BoundContract,error)
 
 
 // ErrInstanceConversion failed type conversion
-var ErrInstanceConversion = errors.New("Can't convert type of smart contract")
+var (
+	ErrInstanceConversion = errors.New("Can't convert type of smart contract")
+	ErrLoadSc = errors.New("Invalid or imposible to load contract: %s \nError : %s")
+)
 
 // NewContract create a contract
 func NewContract(

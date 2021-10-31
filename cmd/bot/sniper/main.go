@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/pkg/networks"
 )
@@ -22,9 +21,9 @@ const (
 	CnfFileIDDefault = "config.yaml"
 	// Flags
 	keystoreID = "keystore"
-	manualID = "manualFee"
-	chainid = "chainid"
-	pass = "pass"
+	manualID   = "manualFee"
+	chainid    = "chainid"
+	pass       = "pass"
 )
 
 var (
@@ -83,7 +82,6 @@ func init() {
 	)
 	sniperCmd.MarkPersistentFlagRequired(pass)
 	viper.BindPFlag(pass, sniperCmd.PersistentFlags().Lookup(pass))
-
 }
 
 func main() {
@@ -95,7 +93,7 @@ func main() {
 	}
 
 	n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
-	// t1, err := n.Cancel(big.NewInt(3))
+	n.Cancel(big.NewInt(3))
 
-	defer helpers.RecoverAndLog()
+	n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.01))
 }
