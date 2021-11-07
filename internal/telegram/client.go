@@ -1,10 +1,10 @@
 package telegram
 
 import (
-	"strings"
-	"os"
-	"time"
 	"log"
+	"os"
+	"strings"
+	"time"
 
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -16,8 +16,8 @@ func GetTgBot() *tb.Bot {
 	finalUrl := strings.Join([]string{URL, ":", PORT}, "")
 
 	b, err := tb.NewBot(tb.Settings{
-		URL: finalUrl,
-		Token: os.Getenv("TELEGRAM_BOT_TOKEN"),
+		URL:    finalUrl,
+		Token:  os.Getenv("TELEGRAM_BOT_TOKEN"),
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
 	})
 

@@ -11,10 +11,12 @@ import (
 	"github.com/magefile/mage/mg"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
+
 	// mage:import
-	_ "github.com/loic-roux-404/crypto-bots/build/mage/release"
+	ci "github.com/loic-roux-404/crypto-bots/build/mage/ci"
 	// mage:import
 	"github.com/loic-roux-404/crypto-bots/build/mage/solidity"
+
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 )
 
@@ -27,7 +29,8 @@ var (
 	cmds       = []string{"sniper", "scamer"}
 	goexe      = "go"
 	currentDir = helpers.GetCurrDir()
-	binDir, _ = filepath.Abs(filepath.Join(".", "bin"))
+	binDir, _  = filepath.Abs(filepath.Join(".", "bin"))
+	env        = map[string]string{}
 )
 
 var toolsCmds = []string{
@@ -63,23 +66,22 @@ type Build mg.Namespace
 func All() error {
 	b := new(Build)
 
-	err := b.ScPancake(); if err != nil {
+	err := b.ScPancake()
+	if err != nil {
 		return err
 	}
 
-	err = b.Cmds(""); if err != nil {
+	err = b.Cmds("")
+	if err != nil {
 		return err
 	}
 
-	err = b.Api(); if err != nil {
+	err = b.Api()
+	if err != nil {
 		return err
 	}
 
-	err = b.Web(); if err != nil {
-		return err
-	}
-
-	return nil
+	return b.Web()
 }
 
 // Api build protobuf files
@@ -92,16 +94,19 @@ func (Build) Web() error {
 	return nil
 }
 
-var cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+var (
+	cmdCompiler     = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+	gencontractsDir = "gencontracts"
+)
 
 // Cmds build all CLI
 func (Build) Cmds(name string) error {
-	return cmdCompiler.GoexeCmd(name)
+	return cmdCompiler.GoexeCmd(name, env)
 }
 
 // CmdsRun dev command
 func (Build) CmdsRun(name string) error {
-	return cmdCompiler.GoexeRun(name)
+	return cmdCompiler.GoexeRun(name, env)
 }
 
 // ScPancake compile smart contract and generate library
@@ -111,7 +116,7 @@ func (Build) ScPancake() error {
 		log.Printf("Warn: %v", err)
 	}
 
-	if err := s.PackageByNet(scByNetSet, "gencontracts"); err != nil {
+	if err := s.PackageByNet(scByNetSet, gencontractsDir); err != nil {
 		return err
 	}
 
@@ -121,28 +126,46 @@ func (Build) ScPancake() error {
 type Test mg.Namespace
 
 var (
-	mockLoc  = filepath.Join(".", "tests", "mocks")
-	mockDest = filepath.Join(mockLoc, "data")
-	mockName = "glitch"
+	mockLoc    = filepath.Join(".", "tests", "mocks")
+	mockDest   = filepath.Join(mockLoc, "data")
+	mockName   = "glitch"
 	scByNetSet = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
+	// unit tests options
+	unitTimeout = "30s"
+	// Create test runnner modules
+	testRunner = ci.NewRunner(goexe, packageName, env, map[string]string{
+		"timeout": unitTimeout,
+	})
 )
 
-// Runs go mod download and then installs the binary.
+func (t Test) All() (err error) {
+	err = t.Lib(""); if err != nil {
+		return err
+	}
+
+	err = t.Web(); if err != nil {
+		return err
+	}
+
+	return t.Api()
+}
+
+// Api end to end and load testing
 func (Test) Api() error {
 	return nil
 }
 
 // Web Test
-// Runs go mod download and then installs the binary.
-// e2e test TODO (k6) ?
+// Forward to all node js tests
+// cypress / jest / BDD
 func (Test) Web() error {
 	return nil
 }
 
-// Runs go mod download and then installs the binary.
-func (t Test) Cmds() error {
-
-	return nil
+// Lib Tests, all module or single one.
+// Libraries are used in cmd, pkg and api
+func (Test) Lib(pkg string) error {
+	return testRunner.Pkg(pkg)
 }
 
 type Deploy mg.Namespace

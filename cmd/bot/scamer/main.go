@@ -11,7 +11,7 @@ import (
 
 func init() {
 	icmd.InitNetCmd(&cobra.Command{
-		Use: "scamer",
+		Use:   "scamer",
 		Short: "Scamer bot forwarding fees to another wallet",
 	})
 }

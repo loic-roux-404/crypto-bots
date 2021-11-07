@@ -14,7 +14,7 @@ import (
 // ErrAccInvalid invalid
 var (
 	ErrAccInvalid = errors.New("Invalid public key address")
-	ErrScInvalid = errors.New("Invalid smart contract address")
+	ErrScInvalid  = errors.New("Invalid smart contract address")
 )
 
 // ValidateAddress destination
@@ -29,11 +29,11 @@ func ValidateSc(client *ethclient.Client, address common.Address) (bool, error) 
 	bytecode, err := client.CodeAt(
 		context.Background(),
 		address,
-		nil,// nil is latest block
+		nil, // nil is latest block
 	)
 
 	if err != nil {
-	  return false, fmt.Errorf("%s : %s", ErrScInvalid, err)
+		return false, fmt.Errorf("%s : %s", ErrScInvalid, err)
 	}
 
 	return len(bytecode) > 0, nil
@@ -46,7 +46,7 @@ func IsErrAddress(address common.Address) error {
 	}
 	isValidAd := ValidateAddress(acc)
 
-	if (isValidAd) {
+	if isValidAd {
 		return nil
 	}
 

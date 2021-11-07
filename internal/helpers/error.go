@@ -6,7 +6,7 @@ import (
 
 // RecoverAndLog errors
 func RecoverAndLog() {
-	r := recover();
+	r := recover()
 	if _, ok := r.(error); r != nil && ok {
 		log.Printf("Error: %s", r.(error))
 	}

@@ -17,12 +17,12 @@ const (
 )
 
 // Compiler i
-type Compiler struct{
-	cmds []string
+type Compiler struct {
+	cmds  []string
 	goexe string
-	src string
-	dest string
-	mode string
+	src   string
+	dest  string
+	mode  string
 }
 
 // NewCompiler contruct commile module
@@ -44,7 +44,7 @@ func NewCompiler(goexe string, cmds []string, src string, dest string) *Compiler
 
 // GoexeCmd Run a go compiler command
 // Default is build
-func (c *Compiler) GoexeCmd(name string) error {
+func (c *Compiler) GoexeCmd(name string, env map[string]string) error {
 	if len(name) > 0 {
 		c.cmds = funk.Filter(c.cmds, func(x string) bool {
 			return x == name
@@ -55,15 +55,16 @@ func (c *Compiler) GoexeCmd(name string) error {
 		finalc := ToLocalCmd(c.src, cmd)
 		// Default to verbose in run (dev) mode
 		dest := []string{c.mode}
+		var output string
 
 		if c.mode == BUILD {
-			c.dest = fmt.Sprintf("%s/%s", c.dest, cmd)
+			output = fmt.Sprintf("%s/%s", c.dest, cmd)
 			fmt.Printf("Building %s in %s...\n", finalc, c.dest)
-			dest = append(dest, "-o", c.dest)
+			dest = append(dest, "-o", output)
 		}
 
 		dest = append(dest, finalc)
-		err := sh.Run(c.goexe, dest...)
+		err := sh.RunWithV(env, c.goexe, dest...)
 
 		if err != nil {
 			return err
@@ -74,9 +75,9 @@ func (c *Compiler) GoexeCmd(name string) error {
 }
 
 // GoexeRun go run command
-func (c *Compiler) GoexeRun(name string) error {
+func (c *Compiler) GoexeRun(name string, env map[string]string) error {
 	c.mode = RUN
-	err := c.GoexeCmd(name)
+	err := c.GoexeCmd(name, env)
 	c.mode = BUILD
 
 	return err

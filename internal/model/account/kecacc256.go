@@ -22,7 +22,7 @@ var (
 
 // KeccacWallet type
 type KeccacWallet struct {
-	keystore *keystore.KeyStore
+	keystore       *keystore.KeyStore
 	currentAccount accounts.Account
 }
 
@@ -59,7 +59,8 @@ func NewErcWallet(pass string, importKs string, fromAcc string) (*KeccacWallet, 
 	}
 
 	if len(fromAcc) > 0 {
-		err = kecacc.changeCurrAcc(fromAcc); if err != nil {
+		err = kecacc.changeCurrAcc(fromAcc)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -74,7 +75,7 @@ func (k *KeccacWallet) initAccount(pass string, wantedKsFile string) error {
 		acc, err := k.keystore.NewAccount(pass)
 
 		if err != nil {
-			return  err
+			return err
 		}
 
 		k.currentAccount = acc
@@ -110,7 +111,8 @@ func (k *KeccacWallet) addKs(
 	log.Printf("Warning: %s", err)
 	log.Printf("Creating keystore: %s", file)
 
-	acc, err := k.keystore.NewAccount(pass); if err != nil {
+	acc, err := k.keystore.NewAccount(pass)
+	if err != nil {
 		log.Panic(errAccCreation.Error(), err)
 	}
 
@@ -130,7 +132,8 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 	}
 
 	// Find the signing account
-	signAcc, err := k.keystore.Find(fromAccDef); if err == nil {
+	signAcc, err := k.keystore.Find(fromAccDef)
+	if err == nil {
 		k.currentAccount = signAcc
 	} else {
 		return fmt.Errorf("%s %s", errAccNotFound, address)

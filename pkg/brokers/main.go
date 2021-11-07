@@ -7,15 +7,16 @@ import (
 	"github.com/loic-roux-404/crypto-bots/internal/ibrokers"
 )
 
-var bs = helpers.Map {
-    "binance": ibrokers.NewBinance(),
+var bs = helpers.Map{
+	"binance": ibrokers.NewBinance(),
 }
 
 // Get in map
 func Get(name string) (ibrokers.Broker, error) {
-    broker, err := helpers.GetInMap(bs, name); if err != nil {
-        log.Fatal(err)
-    }
+	broker, err := helpers.GetInMap(bs, name)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    return broker.(ibrokers.Broker), err
+	return broker.(ibrokers.Broker), err
 }

@@ -18,14 +18,14 @@ import (
 // Tx transaction infos
 // TODO more generic address (non keccac related)
 type Tx struct {
-	Hash common.Hash
-	To common.Address
-	Nonce *big.Int
-	GasLimit *big.Int
-	GasPrice *big.Int
+	Hash        common.Hash
+	To          common.Address
+	Nonce       *big.Int
+	GasLimit    *big.Int
+	GasPrice    *big.Int
 	TokenAmount *big.Float
-	Amount *big.Int
-	Data []byte
+	Amount      *big.Int
+	Data        []byte
 }
 
 // NewTx prepare transaction requirements
@@ -38,22 +38,22 @@ func NewTx(
 	data []byte,
 ) (*Tx, error) {
 
-		if (data == nil || len(data) <= 0) {
-			data = []byte{}
-		}
+	if data == nil || len(data) <= 0 {
+		data = []byte{}
+	}
 
-		finalAmount := token.ToWei(amount)
+	finalAmount := token.ToWei(amount)
 
-		return &Tx{
-			Hash: common.Hash{}, // empty hash for non broadcasted tx
-			To: to,
-			Nonce: nonce,
-			TokenAmount: amount,
-			Amount: finalAmount,
-			GasLimit: gasLimit,
-			GasPrice: gasPrice,
-			Data: data,
-		}, nil
+	return &Tx{
+		Hash:        common.Hash{}, // empty hash for non broadcasted tx
+		To:          to,
+		Nonce:       nonce,
+		TokenAmount: amount,
+		Amount:      finalAmount,
+		GasLimit:    gasLimit,
+		GasPrice:    gasPrice,
+		Data:        data,
+	}, nil
 }
 
 // TxIsFrom address
@@ -63,6 +63,7 @@ func TxIsFrom(hash common.Hash, address common.Address) (bool, error) {
 	publicKeyBytes, err := hex.DecodeString(hash.String())
 
 	if err != nil {
+		println(err)
 		return false, err
 	}
 
@@ -77,7 +78,7 @@ func TxIsFrom(hash common.Hash, address common.Address) (bool, error) {
 
 // KeccacTx decode kecacc signer transaction hash string
 func KeccacTx(rawTx common.Hash) (tx *types.Transaction, err error) {
-    rawTxBytes, err := hex.DecodeString(rawTx.String())
+	rawTxBytes, err := hex.DecodeString(rawTx.String())
 	rlp.DecodeBytes(rawTxBytes, &tx)
 
 	return tx, err
@@ -92,27 +93,28 @@ func NewTxFromKeccacHash(hash common.Hash) (*Tx, error) {
 	}
 
 	return &Tx{
-		Hash: hash,
-		To: *keccacTx.To(),
-		Nonce: new(big.Int).SetUint64(keccacTx.Nonce()),
-		GasLimit: nil,
-		GasPrice: keccacTx.GasPrice(),
+		Hash:        hash,
+		To:          *keccacTx.To(),
+		Nonce:       new(big.Int).SetUint64(keccacTx.Nonce()),
+		GasLimit:    nil,
+		GasPrice:    keccacTx.GasPrice(),
 		TokenAmount: token.FromWei(keccacTx.Value()),
-		Amount: keccacTx.Value(),
-		Data: keccacTx.Data(),
+		Amount:      keccacTx.Value(),
+		Data:        keccacTx.Data(),
 	}, nil
 }
 
 // Log transaction in json
 func (tx *Tx) Log() {
 	m := helpers.Map{
-		"nonce": tx.Nonce.Uint64(),
-		"to": tx.To,
-		"data": tx.Data,
+		"hash":     tx.Hash.String(),
+		"nonce":    tx.Nonce.Uint64(),
+		"to":       tx.To,
+		"data":     tx.Data,
 		"gasLimit": tx.GasLimit,
 		"gasPrice": tx.GasPrice,
-		"Wei": tx.Amount,
-		"Eth": tx.TokenAmount,
+		"Wei":      tx.Amount,
+		"Eth":      tx.TokenAmount,
 	}
 	jsonString, _ := json.Marshal(m)
 

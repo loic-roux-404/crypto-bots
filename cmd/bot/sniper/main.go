@@ -10,7 +10,7 @@ import (
 
 func init() {
 	icmd.InitNetCmd(&cobra.Command{
-		Use: "sniper",
+		Use:   "sniper",
 		Short: "Sniper transaction",
 	})
 }
