@@ -1,99 +1,23 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"math/big"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/loic-roux-404/crypto-bots/internal/model/net"
+	"github.com/loic-roux-404/crypto-bots/pkg/icmd"
 	"github.com/loic-roux-404/crypto-bots/pkg/networks"
-)
-
-const (
-	// NetCnfIDDefault default network name to load
-	NetCnfIDDefault = "ropsten"
-	// CnfFileID config location
-	CnfFileID = "config"
-	// CnfFileIDDefault file
-	CnfFileIDDefault = "config.yaml"
-	// Flags
-	keystoreID = "keystore"
-	manualID   = "manualFee"
-	chainid    = "chainid"
-	pass       = "pass"
-)
-
-var (
-	// CfgFile location
-	CfgFile string
-
-	sniperCmd = &cobra.Command{
-		Use:   "sniper",
-		Short: "Sniping wallet strategy bot",
-	}
+	"github.com/spf13/cobra"
 )
 
 func init() {
-	// User Configuration
-	sniperCmd.PersistentFlags().StringVar(
-		&CfgFile,
-		CnfFileID,
-		CnfFileIDDefault,
-		fmt.Sprintf("user config file (default is %s)", CnfFileIDDefault),
-	)
-	// Network choice
-	sniperCmd.PersistentFlags().StringP(
-		net.NetCnfID,
-		"n",
-		NetCnfIDDefault,
-		"ERC_20 like network id to load, default depending of chain type",
-	)
-	viper.BindPFlag(net.NetCnfID, sniperCmd.PersistentFlags().Lookup(net.NetCnfID))
-	// Keystorefile location
-	sniperCmd.PersistentFlags().StringP(
-		keystoreID,
-		"m",
-		"",
-		"Keystore location, json format file storing encrypted keys. create it from metamask",
-	)
-	sniperCmd.MarkPersistentFlagRequired(keystoreID)
-	viper.BindPFlag(keystoreID, sniperCmd.PersistentFlags().Lookup(keystoreID))
-	// Auto gas
-	sniperCmd.PersistentFlags().Bool(manualID, false, "Disable automatic gas estimation")
-	viper.BindPFlag(manualID, sniperCmd.PersistentFlags().Lookup(manualID))
-	// Chainid
-	sniperCmd.PersistentFlags().Int16P(
-		chainid,
-		"i",
-		3,
-		"Chain id",
-	)
-	sniperCmd.MarkPersistentFlagRequired(chainid)
-	viper.BindPFlag(chainid, sniperCmd.PersistentFlags().Lookup(chainid))
-	// Account password
-	sniperCmd.PersistentFlags().StringP(
-		pass,
-		"p",
-		"",
-		"Account Password",
-	)
-	sniperCmd.MarkPersistentFlagRequired(pass)
-	viper.BindPFlag(pass, sniperCmd.PersistentFlags().Lookup(pass))
+	icmd.InitNetCmd(&cobra.Command{
+		Use: "sniper",
+		Short: "Sniper transaction",
+	})
 }
 
 func main() {
-	sniperCmd.Execute()
-	n, err := networks.GetNetwork("erc20")
+	icmd.ExecuteNetCmd()
+	n := networks.GetNetwork("erc20")
 
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
-
-	n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.02))
-	n.Cancel(big.NewInt(3))
-
-	n.Send("0x36A130e8BD0fa0a39B92CfEEeCC8356EdbdD109e", big.NewFloat(0.01))
+	n.Send("0xD4b2ae5560F8905fa4bb5C7f04122117A639B43d", big.NewFloat(0.02))
 }

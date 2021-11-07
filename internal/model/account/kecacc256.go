@@ -13,14 +13,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
+	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 )
 
 var (
 	dir = helpers.GetCurrDir()
 )
 
-// Kecacc256 type
-type Kecacc256 struct {
+// KeccacWallet type
+type KeccacWallet struct {
 	keystore *keystore.KeyStore
 	currentAccount accounts.Account
 }
@@ -31,9 +32,8 @@ var (
 	errAccNotFound = errors.New("No account in keystore : ")
 )
 
-// NewKecacc256 kecacc
-func NewKecacc256(pass string, importKs string, fromAcc string) (*Kecacc256, error) {
-
+// NewErcWallet kecacc
+func NewErcWallet(pass string, importKs string, fromAcc string) (*KeccacWallet, error) {
 	if len(pass) <= 0 {
 		return nil, errPassMissing
 	}
@@ -44,7 +44,7 @@ func NewKecacc256(pass string, importKs string, fromAcc string) (*Kecacc256, err
 		keystore.StandardScryptP,
 	)
 
-	kecacc := &Kecacc256{keystore: ks, currentAccount: accounts.Account{}}
+	kecacc := &KeccacWallet{keystore: ks, currentAccount: accounts.Account{}}
 
 	err := kecacc.initAccount(pass, importKs)
 
@@ -64,10 +64,12 @@ func NewKecacc256(pass string, importKs string, fromAcc string) (*Kecacc256, err
 		}
 	}
 
+	log.Printf("Info: Logged address %s", kecacc.currentAccount.Address)
+
 	return kecacc, nil
 }
 
-func (k *Kecacc256) initAccount(pass string, wantedKsFile string) error {
+func (k *KeccacWallet) initAccount(pass string, wantedKsFile string) error {
 	if len(wantedKsFile) <= 0 {
 		acc, err := k.keystore.NewAccount(pass)
 
@@ -89,7 +91,7 @@ func (k *Kecacc256) initAccount(pass string, wantedKsFile string) error {
 	return nil
 }
 
-func (k *Kecacc256) addKs(
+func (k *KeccacWallet) addKs(
 	file string,
 	pass string,
 ) (accounts.Account, error) {
@@ -117,7 +119,7 @@ func (k *Kecacc256) addKs(
 	return acc, nil
 }
 
-func (k *Kecacc256) changeCurrAcc(address string) error {
+func (k *KeccacWallet) changeCurrAcc(address string) error {
 	// Create account definitions
 	fromAccDef := accounts.Account{
 		Address: common.HexToAddress(address),
@@ -137,12 +139,17 @@ func (k *Kecacc256) changeCurrAcc(address string) error {
 	return nil
 }
 
+// IsTxFromCurrent account
+func (k *KeccacWallet) IsTxFromCurrent(hash common.Hash) (bool, error) {
+	return transaction.TxIsFrom(hash, k.currentAccount.Address)
+}
+
 // Account initialized
-func (k *Kecacc256) Account() accounts.Account {
+func (k *KeccacWallet) Account() accounts.Account {
 	return k.currentAccount
 }
 
 // Ks to use methods
-func (k *Kecacc256) Ks() *keystore.KeyStore {
+func (k *KeccacWallet) Ks() *keystore.KeyStore {
 	return k.keystore
 }

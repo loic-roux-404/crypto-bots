@@ -1,8 +1,7 @@
-package inetworks
+package erc20
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -12,13 +11,14 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/loic-roux-404/crypto-bots/internal/model/store"
+	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
+	"github.com/loic-roux-404/crypto-bots/internal/watcher"
 )
 
 const (
@@ -35,38 +35,38 @@ var (
 // ErcHandler Handler config
 type ErcHandler struct {
 	name string
-	client *ethclient.Client
-	kecacc *account.Kecacc256
+	clients *NodeClients
+	kecacc *account.KeccacWallet
 	config *net.ERCConfig
 	contracts map[string]*store.Contract
 }
 
 // NewEth create etherum handler
-func NewEth() (Network, error) {
+func NewEth() (net.Network) {
 	cnf, err := net.NewERCConfig(ErcNetName, defaultNode); if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	log.Printf("Connecting to %s...", cnf.Ipc)
-	conn, err := ethclient.Dial(cnf.Ipc)
+	log.Printf("Info: Connecting to %s...", cnf.Ipc)
+	clients, err := NewClients(cnf.Ipc, cnf.Ws)
 
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	acc, err := account.NewKecacc256(cnf.Pass, cnf.Keystore, cnf.FromAccount)
+	acc, err := account.NewErcWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount)
 
 	if (err != nil) {
-		return nil, err
+		log.Fatal(err)
 	}
 
 	return &ErcHandler{
 		name: ErcNetName,
 		kecacc: acc,
-		client: conn,
+		clients: clients,
 		config: cnf,
 		contracts: make(map[string]*store.Contract),
-	}, nil
+	}
 }
 
 // Send transaction to address
@@ -141,10 +141,7 @@ func (e *ErcHandler) Cancel(nonce *big.Int) (common.Hash) {
 }
 
 // Deploy a smart contract api function
-func (e *ErcHandler) Deploy(
-	input string,
-	storeDeployFn store.DeployFn,
-) *store.Contract {
+func (e *ErcHandler) Deploy(input string, storeDeployFn store.DeployFn) interface{} {
 	defer helpers.RecoverAndLog()
 	auth, err := e.getAuth()
 
@@ -152,7 +149,7 @@ func (e *ErcHandler) Deploy(
 		panic(err)
 	}
 
-	address, tx, instance, err := storeDeployFn(auth, e.client, input)
+	address, tx, instance, err := storeDeployFn(auth, e.clients.EthRPC(), input)
 	addressStr := address.String()
 	e.contracts[addressStr] = store.NewContract(address, tx, instance)
 
@@ -166,10 +163,10 @@ func (e *ErcHandler) Deploy(
 }
 
 // Load a smart contract
-func (e *ErcHandler) Load(address string, loadFn store.LoadFn) *store.Contract {
+func (e *ErcHandler) Load(address string, loadFn store.LoadFn) interface{} {
 	defer helpers.RecoverAndLog()
 	finalAddress := common.HexToAddress(address)
-	isScAddress, err := account.ValidateSc(e.client, common.HexToAddress(address))
+	isScAddress, err := account.ValidateSc(e.clients.EthRPC(), common.HexToAddress(address))
 
 	if value, ok := e.contracts[address]; ok {
 		return value
@@ -179,7 +176,7 @@ func (e *ErcHandler) Load(address string, loadFn store.LoadFn) *store.Contract {
 		panic(fmt.Errorf(store.ErrLoadSc.Error(), address, err))
 	}
 
-	instance, err := loadFn(finalAddress, e.client)
+	instance, err := loadFn(finalAddress, e.clients.EthRPC())
 	e.contracts[address] = store.NewContract(finalAddress, nil, instance)
 
 	if err != nil {
@@ -187,6 +184,67 @@ func (e *ErcHandler) Load(address string, loadFn store.LoadFn) *store.Contract {
     }
 
     return e.contracts[address]
+}
+
+// Subscribe an address
+// TODO move all in watcher module
+func (e *ErcHandler) Subscribe(address string) (watcher.WatcherSc) {
+	log.Printf("Info: Booting subscriber on: %s", address)
+
+	finalAddress := common.HexToAddress(address)
+
+	isSc, err := account.ValidateSc(e.clients.EthRPC(), finalAddress); if err != nil {
+		panic(err)
+	}
+
+	if !isSc {
+		panic(account.ErrScInvalid)
+	}
+
+	w, err := e.subscribeSc(finalAddress)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return w
+
+}
+
+// SubscribeCurrent account
+func (e *ErcHandler) SubscribeCurrent() (watcher.WatcherAcc) {
+
+	w, err := e.subscribeAcc(e.kecacc.Account().Address)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return w
+}
+
+func (e *ErcHandler) subscribeSc(address common.Address) (w *watcher.Sc, err error) {
+	query := ethereum.FilterQuery{
+        Addresses: []common.Address{address},
+    }
+
+	w, err = watcher.NewSc(e.clients.EthWs(), query)
+
+	if err != nil {
+        return nil, err
+	}
+
+	return w, nil
+}
+
+func (e *ErcHandler) subscribeAcc(address common.Address) (w *watcher.Acc, err error) {
+	w, err = watcher.NewAcc(e.clients.GethWs(), e.kecacc)
+
+	if err != nil {
+        return nil, err
+	}
+
+	return w, nil
 }
 
 func (e *ErcHandler) signAndBroadcast(tx *types.Transaction) (common.Hash, error) {
@@ -204,7 +262,7 @@ func (e *ErcHandler) broadcastTx(signTx *types.Transaction) (common.Hash, error)
 	// Send the transaction
 	log.Printf("Sending transaction on chain : %d", e.config.ChainID)
 	// TODO use goroutine
-	err := e.client.SendTransaction(context.Background(), signTx)
+	err := e.clients.EthRPC().SendTransaction(context.Background(), signTx)
 
 	if err != nil {
 		return common.Hash{}, err
@@ -235,7 +293,7 @@ func (e *ErcHandler) setFees(address common.Address) error {
 		return nil
 	}
 
-	limit, err := e.client.EstimateGas(context.Background(), ethereum.CallMsg{
+	limit, err := e.clients.EthRPC().EstimateGas(context.Background(), ethereum.CallMsg{
 		To:   &address,
 		Data: []byte{0},
 	})
@@ -246,7 +304,7 @@ func (e *ErcHandler) setFees(address common.Address) error {
 
 	e.config.GasLimit = limit
 
-	price, err := e.client.SuggestGasPrice(context.Background())
+	price, err := e.clients.EthRPC().SuggestGasPrice(context.Background())
 
 	if err != nil {
 		return err
@@ -262,7 +320,7 @@ func (e *ErcHandler) getNonce() (*big.Int, error) {
 	// nonce, err := client.NonceAt(ctx, address, nil)
 	a := e.kecacc.Account().Address
 	// This is the nonce that should be used for the next transaction.
-	nonce, err := e.client.PendingNonceAt(context.Background(), a)
+	nonce, err := e.clients.EthRPC().PendingNonceAt(context.Background(), a)
 	finalNonce := new(big.Int).SetUint64(nonce)
 
 	if err != nil {
@@ -273,14 +331,14 @@ func (e *ErcHandler) getNonce() (*big.Int, error) {
 }
 
 // prepare transaction requirements
-// TODO : move it in model/transaction
+// TODO refacto to transaction module (named keccac tx)
 func (e *ErcHandler) createTx(
 	address string,
 	nonce *big.Int,
 	amount *big.Float,
 	data []byte,
 ) (*types.Transaction, error) {
-		err := account.IsErrAddress(address)
+		err := account.IsErrStrAddress(address)
 
 		if err != nil {
 			return nil, err
@@ -293,34 +351,33 @@ func (e *ErcHandler) createTx(
 			return nil, err
 		}
 
-		if (data == nil || len(data) <= 0) {
-			data = []byte{}
-		}
-
-		finalAmount := token.EtherToWei(amount)
-
-		logTx(helpers.Map{
-			"nonce": nonce,
-			"from": e.kecacc.Account().Address,
-			"to": finalAddress,
-			"data": data,
-			"gasLimit": e.config.GasLimit,
-			"gasPrice": e.config.GasPrice,
-			"Wei": finalAmount,
-			"Eth": amount,
-		})
-
-		// Create new transaction
-		tx := types.NewTransaction(
-			nonce.Uint64(),
+		tx, err := transaction.NewTx(
 			finalAddress,
-			finalAmount,
-			e.config.GasLimit,
+			nonce,
+			amount,
+			new(big.Int).SetUint64(e.config.GasLimit),
 			big.NewInt(e.config.GasPrice),
 			data,
 		)
 
-		return tx, nil
+		if err != nil {
+			return nil, err
+		}
+
+		// Create new transaction
+		ethTx := types.NewTransaction(
+			tx.Nonce.Uint64(),
+			tx.To,
+			tx.Amount,
+			tx.GasLimit.Uint64(),
+			tx.GasPrice,
+			tx.Data,
+		)
+
+		tx.Hash = ethTx.Hash()
+		tx.Log()
+
+		return ethTx, nil
 }
 
 func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
@@ -339,20 +396,9 @@ func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
 		return nil, err
 	}
 
-	auth.Value = token.EtherToWei(big.NewFloat(0.00))
+	auth.Value = token.ToWei(big.NewFloat(0.00))
 	auth.GasLimit = e.config.GasLimit
 	auth.GasPrice = big.NewInt(e.config.GasPrice)
 
 	return auth, nil
-}
-
-// TODO move in model/transaction
-func logTx(m helpers.Map) {
-	jsonString, _ := json.Marshal(m)
-
-	log.Printf("info: Tx %s", jsonString)
-}
-
-func getEmptyHash() common.Hash {
-	return (common.Hash)([common.HashLength]byte{0})
 }

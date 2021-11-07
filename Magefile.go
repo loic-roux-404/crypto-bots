@@ -24,7 +24,7 @@ const (
 
 var (
 	ports      = []string{"4205"}
-	cmds       = []string{"sniper"}
+	cmds       = []string{"sniper", "scamer"}
 	goexe      = "go"
 	currentDir = helpers.GetCurrDir()
 	binDir, _ = filepath.Abs(filepath.Join(".", "bin"))

@@ -39,10 +39,10 @@ func ValidateSc(client *ethclient.Client, address common.Address) (bool, error) 
 	return len(bytecode) > 0, nil
 }
 
-// isErrAddress validate address but return an error if invalid
-func IsErrAddress(address string) error {
+// IsErrAddress validate address but return an error if invalid
+func IsErrAddress(address common.Address) error {
 	acc := accounts.Account{
-		Address: common.HexToAddress(address),
+		Address: address,
 	}
 	isValidAd := ValidateAddress(acc)
 
@@ -51,4 +51,11 @@ func IsErrAddress(address string) error {
 	}
 
 	return fmt.Errorf("%s : %s", ErrAccInvalid, address)
+}
+
+// IsErrStrAddress is this string address ok
+func IsErrStrAddress(address string) error {
+	finalAddress := common.HexToAddress(address)
+
+	return IsErrAddress(finalAddress)
 }

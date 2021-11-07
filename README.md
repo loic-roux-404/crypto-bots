@@ -7,14 +7,16 @@
 #### Chain related
 
 - ERC-20 sniper bot main :
+    - [ ] Control verbose
     - [x] Send
-    - [ ] Cancel
-    - [ ] Update tx
-    - [ ] Call sc
-    - [ ] Deploy sc
+    - [x] Cancel
+    - [x] Update tx
+    - [x] Call sc
+    - [x] Deploy sc
     - [ ] Add private key to accounts
     - [ ] wallet (locking by sniping fee funds)
     - [ ] smart contract pair (sell, buy)
+    - [ ] Block observation
 - [ ] Secrets using decentralized secrets store [nucypher](https://www.nucypher.com/)
 
 #### Exchanges related
@@ -33,16 +35,24 @@
 ##### Tests
 
 - [ ] Plan what to test
+- [ ] Test unit token conversions
 - [ ] (e2e) contract calls
+- [ ] Typing casts
 
 ##### Refacto
 
-- [ ] move errors in return to panic and handle with panic
+- [x] move errors in return to panic and handle with panic
 
 ### Backtest config
 
-DEX : SRM / uniswapv3
-- [x] find testnet connection
+DEX : 
+- [ ] SRM
+- [ ] uniswapv3
+- [ ] Pancakeswap
+
+Nets : 
+- [x] (erc20) find testnet connection
+- [ ] (bep20) find testnet connection
 - k6 for load and e2e tests ?
 
 ### Bug
