@@ -1,4 +1,4 @@
-package icmd
+package template
 
 import (
 	"fmt"
