@@ -3,13 +3,13 @@ package token
 import "strings"
 
 // Pair type
-type Pair struct{
-	buy string
+type Pair struct {
+	buy  string
 	sell string
 }
 
 // NewSymbol func
-func NewSymbol(buy string, sell string) Pair{
+func NewSymbol(buy string, sell string) Pair {
 	return Pair{buy: buy, sell: sell}
 }
 

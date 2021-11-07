@@ -1,4 +1,4 @@
-package release
+package ci
 
 import (
 	"strings"
@@ -19,8 +19,8 @@ var semverFlags = []string{
 	"download-plugins",
 }
 
-// SemRelease semantic release
-func (Release) SemRelease(prerelease bool, noCi bool) error {
+// Semantic run release generation
+func (Release) Semantic(prerelease bool, noCi bool) error {
 	if prerelease {
 		semverFlags = append(semverFlags, "prerelease")
 	}

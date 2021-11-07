@@ -14,10 +14,10 @@ import (
 
 // Sc type
 type Sc struct {
-	wsClient *ethclient.Client
+	wsClient   *ethclient.Client
 	gethClient *gethclient.Client
-	Sub ethereum.Subscription
-	logs chan types.Log
+	Sub        ethereum.Subscription
+	logs       chan types.Log
 }
 
 // NewSc for a specific query (need websocket connection)
@@ -39,23 +39,23 @@ func NewSc(ws *ethclient.Client, q ethereum.FilterQuery) (*Sc, error) {
 // RunEventLoop launch
 func (w *Sc) RunEventLoop(callback ScSubCallback) {
 	for {
-        select {
-        case err := <-w.Sub.Err():
-            log.Fatal(err)
+		select {
+		case err := <-w.Sub.Err():
+			log.Fatal(err)
 		case vLog := <-w.logs:
 			fmt.Println(vLog)
 			callback(vLog)
-        }
-    }
+		}
+	}
 }
 
 // Sub builder
 func (w *Sc) sub(q ethereum.FilterQuery) (ethereum.Subscription, chan types.Log, error) {
 	logs := make(chan types.Log)
 	// TODO if smart contract subscribe filter SubscribeFilterLogs
-    sub, err := w.wsClient.SubscribeFilterLogs(context.Background(), q, logs)
-    if err != nil {
-        return nil, nil, err
+	sub, err := w.wsClient.SubscribeFilterLogs(context.Background(), q, logs)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return sub, logs, nil

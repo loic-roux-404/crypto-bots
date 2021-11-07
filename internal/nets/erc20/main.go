@@ -23,7 +23,7 @@ import (
 
 const (
 	// ErcNetName identifier
-	ErcNetName = "erc20"
+	ErcNetName  = "erc20"
 	defaultNode = "ropsten"
 )
 
@@ -34,16 +34,17 @@ var (
 
 // ErcHandler Handler config
 type ErcHandler struct {
-	name string
-	clients *NodeClients
-	kecacc *account.KeccacWallet
-	config *net.ERCConfig
+	name      string
+	clients   *NodeClients
+	kecacc    *account.KeccacWallet
+	config    *net.ERCConfig
 	contracts map[string]*store.Contract
 }
 
 // NewEth create etherum handler
-func NewEth() (net.Network) {
-	cnf, err := net.NewERCConfig(ErcNetName, defaultNode); if err != nil {
+func NewEth() net.Network {
+	cnf, err := net.NewERCConfig(ErcNetName, defaultNode)
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -56,15 +57,15 @@ func NewEth() (net.Network) {
 
 	acc, err := account.NewErcWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount)
 
-	if (err != nil) {
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	return &ErcHandler{
-		name: ErcNetName,
-		kecacc: acc,
-		clients: clients,
-		config: cnf,
+		name:      ErcNetName,
+		kecacc:    acc,
+		clients:   clients,
+		config:    cnf,
 		contracts: make(map[string]*store.Contract),
 	}
 }
@@ -123,7 +124,7 @@ func (e *ErcHandler) Update(
 }
 
 // Cancel cancel transaction
-func (e *ErcHandler) Cancel(nonce *big.Int) (common.Hash) {
+func (e *ErcHandler) Cancel(nonce *big.Int) common.Hash {
 	defer helpers.RecoverAndLog()
 	tx, err := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
 
@@ -180,20 +181,21 @@ func (e *ErcHandler) Load(address string, loadFn store.LoadFn) interface{} {
 	e.contracts[address] = store.NewContract(finalAddress, nil, instance)
 
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 
-    return e.contracts[address]
+	return e.contracts[address]
 }
 
 // Subscribe an address
 // TODO move all in watcher module
-func (e *ErcHandler) Subscribe(address string) (watcher.WatcherSc) {
+func (e *ErcHandler) Subscribe(address string) watcher.WatcherSc {
 	log.Printf("Info: Booting subscriber on: %s", address)
 
 	finalAddress := common.HexToAddress(address)
 
-	isSc, err := account.ValidateSc(e.clients.EthRPC(), finalAddress); if err != nil {
+	isSc, err := account.ValidateSc(e.clients.EthRPC(), finalAddress)
+	if err != nil {
 		panic(err)
 	}
 
@@ -212,7 +214,7 @@ func (e *ErcHandler) Subscribe(address string) (watcher.WatcherSc) {
 }
 
 // SubscribeCurrent account
-func (e *ErcHandler) SubscribeCurrent() (watcher.WatcherAcc) {
+func (e *ErcHandler) SubscribeCurrent() watcher.WatcherAcc {
 
 	w, err := e.subscribeAcc(e.kecacc.Account().Address)
 
@@ -225,13 +227,13 @@ func (e *ErcHandler) SubscribeCurrent() (watcher.WatcherAcc) {
 
 func (e *ErcHandler) subscribeSc(address common.Address) (w *watcher.Sc, err error) {
 	query := ethereum.FilterQuery{
-        Addresses: []common.Address{address},
-    }
+		Addresses: []common.Address{address},
+	}
 
 	w, err = watcher.NewSc(e.clients.EthWs(), query)
 
 	if err != nil {
-        return nil, err
+		return nil, err
 	}
 
 	return w, nil
@@ -241,7 +243,7 @@ func (e *ErcHandler) subscribeAcc(address common.Address) (w *watcher.Acc, err e
 	w, err = watcher.NewAcc(e.clients.GethWs(), e.kecacc)
 
 	if err != nil {
-        return nil, err
+		return nil, err
 	}
 
 	return w, nil
@@ -338,46 +340,46 @@ func (e *ErcHandler) createTx(
 	amount *big.Float,
 	data []byte,
 ) (*types.Transaction, error) {
-		err := account.IsErrStrAddress(address)
+	err := account.IsErrStrAddress(address)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		finalAddress := common.HexToAddress(address)
-		err = e.setFees(finalAddress)
+	finalAddress := common.HexToAddress(address)
+	err = e.setFees(finalAddress)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		tx, err := transaction.NewTx(
-			finalAddress,
-			nonce,
-			amount,
-			new(big.Int).SetUint64(e.config.GasLimit),
-			big.NewInt(e.config.GasPrice),
-			data,
-		)
+	tx, err := transaction.NewTx(
+		finalAddress,
+		nonce,
+		amount,
+		new(big.Int).SetUint64(e.config.GasLimit),
+		big.NewInt(e.config.GasPrice),
+		data,
+	)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		// Create new transaction
-		ethTx := types.NewTransaction(
-			tx.Nonce.Uint64(),
-			tx.To,
-			tx.Amount,
-			tx.GasLimit.Uint64(),
-			tx.GasPrice,
-			tx.Data,
-		)
+	// Create new transaction
+	ercTx := types.NewTransaction(
+		tx.Nonce.Uint64(),
+		tx.To,
+		tx.Amount,
+		tx.GasLimit.Uint64(),
+		tx.GasPrice,
+		tx.Data,
+	)
 
-		tx.Hash = ethTx.Hash()
-		tx.Log()
+	tx.Hash = ercTx.Hash()
+	tx.Log()
 
-		return ethTx, nil
+	return ercTx, nil
 }
 
 func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
@@ -388,11 +390,13 @@ func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
 		return nil, err
 	}
 
-	auth.Nonce, err = e.getNonce(); if err != nil {
+	auth.Nonce, err = e.getNonce()
+	if err != nil {
 		return nil, err
 	}
 
-	err = e.setFees(acc.Address); if err != nil {
+	err = e.setFees(acc.Address)
+	if err != nil {
 		return nil, err
 	}
 

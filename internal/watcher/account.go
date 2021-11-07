@@ -8,16 +8,16 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 	"github.com/loic-roux-404/crypto-bots/internal/model/account"
+	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 )
 
 // Acc type
 type Acc struct {
 	gethClient *gethclient.Client
-	Sub ethereum.Subscription
-	txs chan common.Hash
-	acc *account.KeccacWallet
+	Sub        ethereum.Subscription
+	txs        chan common.Hash
+	acc        *account.KeccacWallet
 }
 
 // NewAcc for a specific query (need websocket connection)
@@ -38,11 +38,12 @@ func NewAcc(ws *gethclient.Client, acc *account.KeccacWallet) (w *Acc, err error
 // RunEventLoop launch
 func (w *Acc) RunEventLoop(callback AccSubCallback) {
 	for {
-        select {
-        case err := <-w.Sub.Err():
-            log.Fatal(err)
+		select {
+		case err := <-w.Sub.Err():
+			log.Fatal(err)
 		case vTx := <-w.txs:
-			ok, err := w.acc.IsTxFromCurrent(vTx); if err != nil {
+			ok, err := w.acc.IsTxFromCurrent(vTx)
+			if err != nil {
 				log.Panic(err)
 			}
 
@@ -50,13 +51,14 @@ func (w *Acc) RunEventLoop(callback AccSubCallback) {
 				return
 			}
 
-			tx, err := transaction.NewTxFromKeccacHash(vTx); if err != nil {
+			tx, err := transaction.NewTxFromKeccacHash(vTx)
+			if err != nil {
 				log.Panic(err)
 			}
 			log.Printf("Info: callback on : %s", tx.Hash)
 			callback(tx)
-        }
-    }
+		}
+	}
 }
 
 // Sub build subscriber
@@ -66,7 +68,7 @@ func (w *Acc) sub() (ethereum.Subscription, chan common.Hash, error) {
 	sub, err := w.gethClient.SubscribePendingTransactions(context.Background(), txs)
 
 	if err != nil {
-        return nil, nil, err
+		return nil, nil, err
 	}
 
 	return sub, txs, nil

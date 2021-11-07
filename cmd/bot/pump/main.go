@@ -7,17 +7,17 @@ import (
 
 	tb "gopkg.in/tucnak/telebot.v2"
 
-	"github.com/loic-roux-404/crypto-bots/pkg/brokers"
 	"github.com/loic-roux-404/crypto-bots/internal/ibrokers"
-	"github.com/loic-roux-404/crypto-bots/internal/telegram"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/telegram"
+	"github.com/loic-roux-404/crypto-bots/pkg/brokers"
 )
 
 func main() {
 	b := telegram.GetTgBot()
 	cex, err := brokers.Get("binance")
 
-	if (err != nil) {
+	if err != nil {
 		log.Fatal(err)
 	}
 

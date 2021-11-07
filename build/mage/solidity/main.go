@@ -37,25 +37,24 @@ func (Solidity) install(version string) error {
 // Compile smart contract
 func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) error {
 	// TODO use a yaml config to set version
-	err := s.install("0.5.16"); if err != nil {
+	err := s.install("0.5.16")
+	if err != nil {
 		return err
 	}
 
 	finalMockName := fmt.Sprintf("%s.sol", mockName)
 	var (
 		pcv2Contract = filepath.Join(mockLoc, finalMockName)
-		pcv2Bin = filepath.Join(mockDest, fmt.Sprintf("%s.bin", mockName))
-		pcv2Abi = filepath.Join(mockDest, fmt.Sprintf("%s.abi", mockName))
-		mockDestArg = fmt.Sprintf("--output-dir=%s", mockDest)
+		pcv2Bin      = filepath.Join(mockDest, fmt.Sprintf("%s.bin", mockName))
+		pcv2Abi      = filepath.Join(mockDest, fmt.Sprintf("%s.abi", mockName))
+		mockDestArg  = fmt.Sprintf("--output-dir=%s", mockDest)
 	)
 
-	if err := sh.Run("solc", "--abi", pcv2Contract, mockDestArg);
-	err != nil {
+	if err := sh.Run("solc", "--abi", pcv2Contract, mockDestArg); err != nil {
 		return err
 	}
 
-	if err := sh.Run("solc", "--bin", pcv2Contract, mockDestArg);
-	err != nil {
+	if err := sh.Run("solc", "--bin", pcv2Contract, mockDestArg); err != nil {
 		return err
 	}
 
@@ -94,8 +93,7 @@ func (s Solidity) Package(src string, pkgDir string, pkg string) error {
 	abi := fmt.Sprintf("%s.abi", src)
 	pkgGo := filepath.Join(pkgDir, fmt.Sprintf("%s.go", pkg))
 
-	if err := sh.Run("abigen", "--bin", bin, "--abi", abi, "--pkg", pkgDir, "--out", pkgGo);
-	err != nil {
+	if err := sh.Run("abigen", "--bin", bin, "--abi", abi, "--pkg", pkgDir, "--out", pkgGo); err != nil {
 		return err
 	}
 

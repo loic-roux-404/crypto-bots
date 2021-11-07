@@ -13,12 +13,13 @@ var nets = helpers.Map{
 }
 
 // GetNetwork in map
-func GetNetwork(name string) (net.Network) {
-    impl, err := helpers.GetInMap(nets, name); if err != nil {
-        log.Fatal(err)
+func GetNetwork(name string) net.Network {
+	impl, err := helpers.GetInMap(nets, name)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	netFn := impl.(func()(net.Network))
+	netFn := impl.(func() net.Network)
 
-    return netFn()
+	return netFn()
 }

@@ -13,7 +13,7 @@ import (
 
 // BinanceHandler Handler structure
 type BinanceHandler struct {
-	client *binance.Client
+	client  *binance.Client
 	btcPair bool
 }
 
@@ -54,16 +54,16 @@ func (b *BinanceHandler) Sell(symbol string) (BrokerOperationResponse, error) {
 	)
 }
 
-// GetRoi function 
+// GetRoi function
 func (*BinanceHandler) GetRoi(order BrokerOperationResponse) (int, error) {
 	biOrder := order.(*binance.CreateOrderResponse)
 
 	p, err := strconv.Atoi(biOrder.Price)
-    if err != nil {
-        // handle error
-        // fmt.Println(err)
-        return -2, err
-    }
+	if err != nil {
+		// handle error
+		// fmt.Println(err)
+		return -2, err
+	}
 
 	return p, err
 }

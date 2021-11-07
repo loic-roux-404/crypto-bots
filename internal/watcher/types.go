@@ -12,15 +12,15 @@ type AccSubCallback func(tx *transaction.Tx)
 type ScSubCallback func(log types.Log)
 
 // Watcher default interface
-type WatcherSc interface{
+type WatcherSc interface {
 	RunEventLoop(callback ScSubCallback)
 }
 
-type WatcherAcc interface{
+type WatcherAcc interface {
 	RunEventLoop(callback AccSubCallback)
 }
 
 // Use case for generics
-type LogAdapter interface{
+type LogAdapter interface {
 	Log() interface{}
 }
