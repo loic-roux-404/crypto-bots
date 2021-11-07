@@ -7,6 +7,7 @@ jobs:
     env:
       GO111MODULE: "on"
       CGO_ENABLED: "1"
+      GOPATH: /opt/go
     name: Go app in ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -22,13 +23,18 @@ jobs:
 
     - uses: actions/cache@v2
       with:
-          path: .semrel
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+        path: |
+          ~/.cache/go-build
+          /opt/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
 
     - name: Install go modules
-      run: go mod tidy
+      run: go mod download
+
+    - name: Install mage cmd
+      run: go install github.com/magefile/mage
 
     - name: Build
       run: mage

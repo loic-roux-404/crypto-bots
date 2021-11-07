@@ -1,4 +1,3 @@
-## Subject
 
 <!-- Don't forget :
     - semantic commit

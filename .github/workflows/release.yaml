@@ -17,35 +17,35 @@ jobs:
             contains(github.event.head_commit.message, '[skip-release]') == false
             && contains(github.event.pull_request.labels.*.name, 'skip-release') == false
         runs-on: ubuntu-latest
-    steps:
-            - uses: actions/checkout@v2
-            - uses: actions/setup-go@v2
-              with:
-                go-version: '^1.17.2' # The Go version to download (if necessary) and use.
+        steps:
+          - uses: actions/checkout@v2
+          - uses: actions/setup-go@v2
+            with:
+              go-version: '^1.17.2' # The Go version to download (if necessary) and use.
 
-            - name: log commit in common
-              run: |
-                git fetch origin;
-                [[ -z $(git branch -a --list origin/beta) ]] && exit 0;
-                [[ $(git rev-parse --verify HEAD) = $(git rev-parse --verify origin/beta) ]] \
-                 && echo 'History OK' && exit 0 || echo "history don't match with pre-release" && exit 1;
+          - name: log commit in common
+            run: |
+              git fetch origin;
+              [[ -z $(git branch -a --list origin/beta) ]] && exit 0;
+              [[ $(git rev-parse --verify HEAD) = $(git rev-parse --verify origin/beta) ]] \
+                && echo 'History OK' && exit 0 || echo "history don't match with pre-release" && exit 1;
 
-            # TODO : use semrel version to update cache
-            - uses: actions/cache@v2
-              with:
-                  path: .semrel
-                  key: ${{ runner.os }}-semrel
-                  restore-keys: |
-                    ${{ runner.os }}-semrel
+          # TODO : use semrel version to update cache
+          - uses: actions/cache@v2
+            with:
+                path: .semrel
+                key: ${{ runner.os }}-semrel
+                restore-keys: |
+                  ${{ runner.os }}-semrel
 
-            - uses: actions/cache@v2
-              with:
-                  path: .semrel
-                  key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-                  restore-keys: |
-                    ${{ runner.os }}-go-
+          - uses: actions/cache@v2
+            with:
+                path: .semrel
+                key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+                restore-keys: |
+                  ${{ runner.os }}-go-
 
-            - name: Semantic Release
-              run: mage release:semantic
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          - name: Semantic Release
+            run: mage release:semantic
+            env:
+                GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

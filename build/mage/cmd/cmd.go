@@ -36,7 +36,7 @@ func BinInstall(tools []string) error {
 
 		if pkgCommandExist(pkg) {
 			fmt.Printf("%s Already installed\n", pkg)
-			return nil
+			continue
 		}
 
 		err := sh.Run("go", "install", pkg)
