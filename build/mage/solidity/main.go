@@ -2,6 +2,8 @@ package solidity
 
 import (
 	"fmt"
+	"log"
+	// "os"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +18,18 @@ type Solidity mg.Namespace
 
 const solSelect = "solc-select"
 
+// NewSolidity smart contract gen module
+func NewSolidity(version string) (Solidity, error) {
+	s := Solidity{}
+
+	err := s.install(version)
+	if err != nil {
+		return Solidity{}, err
+	}
+
+	return s, nil
+}
+
 // Install if missing
 func (Solidity) install(version string) error {
 	if helpers.CommandExist(solSelect) {
@@ -23,10 +37,11 @@ func (Solidity) install(version string) error {
 		return nil
 	}
 
-	if helpers.CommandExist("python3") || helpers.CommandExist("python") {
+	if !helpers.CommandExist("python3") && !helpers.CommandExist("python") {
 		return fmt.Errorf("Missing python3, install it to use solidity")
 	}
 
+	log.Printf("Installing solc with version: %s", version)
 	sh.Run("pip3", "install", solSelect)
 	sh.Run(solSelect, "install", version)
 	sh.Run(solSelect, "use", version)
@@ -35,18 +50,10 @@ func (Solidity) install(version string) error {
 }
 
 // Compile smart contract
-func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) error {
-	// TODO use a yaml config to set version
-	err := s.install("0.5.16")
-	if err != nil {
-		return err
-	}
-
-	finalMockName := fmt.Sprintf("%s.sol", mockName)
+func (s Solidity) Compile(mockLoc, mockSrc, mockDest string) error {
 	var (
+		finalMockName = fmt.Sprintf("%s.sol", mockSrc)
 		pcv2Contract = filepath.Join(mockLoc, finalMockName)
-		pcv2Bin      = filepath.Join(mockDest, fmt.Sprintf("%s.bin", mockName))
-		pcv2Abi      = filepath.Join(mockDest, fmt.Sprintf("%s.abi", mockName))
 		mockDestArg  = fmt.Sprintf("--output-dir=%s", mockDest)
 	)
 
@@ -54,17 +61,7 @@ func (s Solidity) Compile(mockLoc string, mockName string, mockDest string) erro
 		return err
 	}
 
-	if err := sh.Run("solc", "--bin", pcv2Contract, mockDestArg); err != nil {
-		return err
-	}
-
-	return sh.Run(
-		"abigen",
-		fmt.Sprint("--bin=", pcv2Bin),
-		fmt.Sprint("--abi=", pcv2Abi),
-		fmt.Sprint("--pkg=", mockDest),
-		fmt.Sprint("--out=", fmt.Sprintf("%s.go", mockName)),
-	)
+	return sh.Run("solc", "--bin", pcv2Contract, mockDestArg)
 }
 
 // PackageByNet a map of net and contract
@@ -93,9 +90,12 @@ func (s Solidity) Package(src string, pkgDir string, pkg string) error {
 	abi := fmt.Sprintf("%s.abi", src)
 	pkgGo := filepath.Join(pkgDir, fmt.Sprintf("%s.go", pkg))
 
+	log.Printf("Info: Building smart contract : %s", pkgGo)
+
 	if err := sh.Run("abigen", "--bin", bin, "--abi", abi, "--pkg", pkgDir, "--out", pkgGo); err != nil {
 		return err
 	}
+
 
 	return nil
 }
