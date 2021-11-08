@@ -25,12 +25,13 @@ const (
 )
 
 var (
-	ports      = []string{"4205"}
-	cmds       = []string{"sniper", "scamer"}
-	goexe      = "go"
-	currentDir = helpers.GetCurrDir()
-	binDir, _  = filepath.Abs(filepath.Join(".", "bin"))
-	env        = map[string]string{}
+	ports       = []string{"4205"}
+	cmds        = []string{"sniper", "scamer"}
+	goexe       = "go"
+	currentDir  = helpers.GetCurrDir()
+	binDir, _   = filepath.Abs(filepath.Join(".", "bin"))
+	env         = map[string]string{}
+	solcVersion = "0.5.16"
 )
 
 var toolsCmds = []string{
@@ -94,9 +95,24 @@ func (Build) Web() error {
 	return nil
 }
 
+// Commands
 var (
-	cmdCompiler     = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+	cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+)
+
+// Contracts
+var (
 	gencontractsDir = "gencontracts"
+	mockLoc         = filepath.Join(".", "tests", "mocks")
+	mockDest        = filepath.Join(mockLoc, "data")
+	mockName        = "glitch"
+	scByNetSet      = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
+	// unit tests options
+	unitTimeout = "30s"
+	// Create test runnner modules
+	testRunner = ci.NewRunner(goexe, packageName, env, map[string]string{
+		"timeout": unitTimeout,
+	})
 )
 
 // Cmds build all CLI
@@ -111,39 +127,30 @@ func (Build) CmdsRun(name string) error {
 
 // ScPancake compile smart contract and generate library
 func (Build) ScPancake() error {
-	s := new(solidity.Solidity)
-	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
-		log.Printf("Warn: %v", err)
-	}
-
-	if err := s.PackageByNet(scByNetSet, gencontractsDir); err != nil {
+	s, err := solidity.NewSolidity(solcVersion)
+	if err != nil {
 		return err
 	}
 
-	return nil
+	err = s.Compile(mockLoc, mockName, mockDest)
+	if err != nil {
+		log.Printf("Warn: %v", err)
+	}
+
+	return s.PackageByNet(scByNetSet, gencontractsDir)
 }
 
 type Test mg.Namespace
 
-var (
-	mockLoc    = filepath.Join(".", "tests", "mocks")
-	mockDest   = filepath.Join(mockLoc, "data")
-	mockName   = "glitch"
-	scByNetSet = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
-	// unit tests options
-	unitTimeout = "30s"
-	// Create test runnner modules
-	testRunner = ci.NewRunner(goexe, packageName, env, map[string]string{
-		"timeout": unitTimeout,
-	})
-)
-
+// TODO set tests folders
 func (t Test) All() (err error) {
-	err = t.Lib(""); if err != nil {
+	err = t.Lib("")
+	if err != nil {
 		return err
 	}
 
-	err = t.Web(); if err != nil {
+	err = t.Web()
+	if err != nil {
 		return err
 	}
 

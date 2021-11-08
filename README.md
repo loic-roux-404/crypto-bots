@@ -18,7 +18,7 @@
     - [ ] smart contract pair (sell, buy)
     - [ ] Block observation
 - [ ] Secrets using decentralized secrets store [nucypher](https://www.nucypher.com/)
-
+- [ ] git ignore ropsten wallet
 #### Exchanges related
 
 - [ ] Listing of twitter exchange messages (WIP)
