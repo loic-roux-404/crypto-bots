@@ -1,4 +1,4 @@
-name: Build and run tests
+name: Test semantic PR
 
 on:
     pull_request:

@@ -12,8 +12,8 @@
 
 ## Good practices
 
-- [] Correct and up to date history
-- [] Correct target branch
-- [] Removed debug commands
+- [ ] Correct and up to date history
+- [ ] Correct target branch
+- [ ] Removed debug commands
 
-<!-- Pour cocher: [x] -->
+<!-- To valid : [x] -->
