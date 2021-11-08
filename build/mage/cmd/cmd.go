@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"strings"
 
 	"github.com/magefile/mage/sh"
@@ -35,9 +36,10 @@ func BinInstall(tools []string) error {
 
 		if pkgCommandExist(pkg) {
 			// Verbose mode ?
-			// fmt.Printf("%s Already installed\n", pkg)
 			continue
 		}
+
+		log.Printf("Info: Installing %s\n", pkg)
 
 		err := sh.Run("go", "install", pkg)
 

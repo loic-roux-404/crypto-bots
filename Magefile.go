@@ -142,6 +142,7 @@ func (Build) ScPancake() error {
 
 type Test mg.Namespace
 
+// TODO set tests folders
 func (t Test) All() (err error) {
 	err = t.Lib("")
 	if err != nil {

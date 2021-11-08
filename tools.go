@@ -1,11 +1,13 @@
+// +build tools
+
 package tools
 
-// Import cmd builded packages
+// Need this file to fix dependency resolve when installing go cmds
 import (
 	// etherum cmds import
 	_ "github.com/ethereum/go-ethereum/cmd/abigen"
 	_ "github.com/ethereum/go-ethereum/cmd/evm"
 	_ "github.com/ethereum/go-ethereum/cmd/geth"
-	// build tool import
+	// mage build tool import
 	_ "github.com/magefile/mage"
 )
