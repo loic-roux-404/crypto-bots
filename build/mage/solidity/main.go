@@ -53,8 +53,8 @@ func (Solidity) install(version string) error {
 func (s Solidity) Compile(mockLoc, mockSrc, mockDest string) error {
 	var (
 		finalMockName = fmt.Sprintf("%s.sol", mockSrc)
-		pcv2Contract = filepath.Join(mockLoc, finalMockName)
-		mockDestArg  = fmt.Sprintf("--output-dir=%s", mockDest)
+		pcv2Contract  = filepath.Join(mockLoc, finalMockName)
+		mockDestArg   = fmt.Sprintf("--output-dir=%s", mockDest)
 	)
 
 	if err := sh.Run("solc", "--abi", pcv2Contract, mockDestArg); err != nil {
@@ -95,7 +95,6 @@ func (s Solidity) Package(src string, pkgDir string, pkg string) error {
 	if err := sh.Run("abigen", "--bin", bin, "--abi", abi, "--pkg", pkgDir, "--out", pkgGo); err != nil {
 		return err
 	}
-
 
 	return nil
 }

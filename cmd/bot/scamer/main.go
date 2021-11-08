@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 	"github.com/loic-roux-404/crypto-bots/cmd/bot/template"
+	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 	"github.com/loic-roux-404/crypto-bots/pkg/networks"
 	"github.com/spf13/cobra"
 )

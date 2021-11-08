@@ -8,10 +8,10 @@ import (
 
 // Runner test info
 type Runner struct {
-	goexe string
+	goexe       string
 	packageName string
-	env map[string]string
-	args map[string]string
+	env         map[string]string
+	args        map[string]string
 }
 
 // NewRunner testing module

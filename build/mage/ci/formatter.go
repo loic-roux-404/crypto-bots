@@ -21,7 +21,7 @@ func (Fmt) Fix() error {
 
 // Check go files format (useful in a CI)
 func (Fmt) Check() (err error) {
-	out, err := helpers.RunAndGetStdout(sh.RunWithV, env, "gofmt", "-d", "-e", "-l", ".");
+	out, err := helpers.RunAndGetStdout(sh.RunWithV, env, "gofmt", "-d", "-e", "-l", ".")
 	hasFmtErr := len(out) > 0
 
 	if !hasFmtErr && err == nil {

@@ -40,7 +40,7 @@ jobs:
       run: mage
 
     - name: Format
-      run: mage format:check
+      run: mage fmt:check
 
     - name: Test
       run: mage test:all

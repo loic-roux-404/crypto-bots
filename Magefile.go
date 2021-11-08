@@ -99,13 +99,14 @@ func (Build) Web() error {
 var (
 	cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
 )
+
 // Contracts
 var (
 	gencontractsDir = "gencontracts"
-	mockLoc    = filepath.Join(".", "tests", "mocks")
-	mockDest   = filepath.Join(mockLoc, "data")
-	mockName   = "glitch"
-	scByNetSet = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
+	mockLoc         = filepath.Join(".", "tests", "mocks")
+	mockDest        = filepath.Join(mockLoc, "data")
+	mockName        = "glitch"
+	scByNetSet      = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
 	// unit tests options
 	unitTimeout = "30s"
 	// Create test runnner modules
@@ -126,25 +127,29 @@ func (Build) CmdsRun(name string) error {
 
 // ScPancake compile smart contract and generate library
 func (Build) ScPancake() error {
-	s, err := solidity.NewSolidity(solcVersion); if err != nil {
+	s, err := solidity.NewSolidity(solcVersion)
+	if err != nil {
 		return err
 	}
 
-	err = s.Compile(mockLoc, mockName, mockDest); if err != nil {
+	err = s.Compile(mockLoc, mockName, mockDest)
+	if err != nil {
 		log.Printf("Warn: %v", err)
 	}
 
-	return s.PackageByNet(scByNetSet, gencontractsDir);
+	return s.PackageByNet(scByNetSet, gencontractsDir)
 }
 
 type Test mg.Namespace
 
 func (t Test) All() (err error) {
-	err = t.Lib(""); if err != nil {
+	err = t.Lib("")
+	if err != nil {
 		return err
 	}
 
-	err = t.Web(); if err != nil {
+	err = t.Web()
+	if err != nil {
 		return err
 	}
 
