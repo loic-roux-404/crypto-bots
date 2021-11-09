@@ -8,8 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 
-	"github.com/loic-roux-404/crypto-bots/internal/model/account"
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
+	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
 )
 
 // Acc type
@@ -17,11 +16,11 @@ type Acc struct {
 	gethClient *gethclient.Client
 	Sub        ethereum.Subscription
 	txs        chan common.Hash
-	acc        *account.KeccacWallet
+	acc        *kecacc.KeccacWallet
 }
 
 // NewAcc for a specific query (need websocket connection)
-func NewAcc(ws *gethclient.Client, acc *account.KeccacWallet) (w *Acc, err error) {
+func NewAcc(ws *gethclient.Client, acc *kecacc.KeccacWallet) (w *Acc, err error) {
 	w = &Acc{gethClient: ws, acc: acc}
 	sub, txs, err := w.sub()
 
@@ -51,7 +50,7 @@ func (w *Acc) RunEventLoop(callback AccSubCallback) {
 				return
 			}
 
-			tx, err := transaction.NewTxFromKeccacHash(vTx)
+			tx, err := kecacc.NewTxFromKeccacHash(vTx)
 			if err != nil {
 				log.Panic(err)
 			}

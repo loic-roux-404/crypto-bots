@@ -13,11 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/account"
+	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/internal/model/store"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 	"github.com/loic-roux-404/crypto-bots/internal/watcher"
 )
 
@@ -36,7 +35,7 @@ var (
 type ErcHandler struct {
 	name      string
 	clients   *NodeClients
-	kecacc    *account.KeccacWallet
+	kecacc    *kecacc.KeccacWallet
 	config    *net.ERCConfig
 	contracts map[string]*store.Contract
 }
@@ -55,7 +54,7 @@ func NewEth() net.Network {
 		log.Fatal(err)
 	}
 
-	acc, err := account.NewErcWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount)
+	acc, err := kecacc.NewErcWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount)
 
 	if err != nil {
 		log.Fatal(err)
@@ -167,7 +166,7 @@ func (e *ErcHandler) Deploy(input string, storeDeployFn store.DeployFn) interfac
 func (e *ErcHandler) Load(address string, loadFn store.LoadFn) interface{} {
 	defer helpers.RecoverAndLog()
 	finalAddress := common.HexToAddress(address)
-	isScAddress, err := account.ValidateSc(e.clients.EthRPC(), common.HexToAddress(address))
+	isScAddress, err := kecacc.ValidateSc(e.clients.EthRPC(), common.HexToAddress(address))
 
 	if value, ok := e.contracts[address]; ok {
 		return value
@@ -194,13 +193,13 @@ func (e *ErcHandler) Subscribe(address string) watcher.WatcherSc {
 
 	finalAddress := common.HexToAddress(address)
 
-	isSc, err := account.ValidateSc(e.clients.EthRPC(), finalAddress)
+	isSc, err := kecacc.ValidateSc(e.clients.EthRPC(), finalAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	if !isSc {
-		panic(account.ErrScInvalid)
+		panic(kecacc.ErrScInvalid)
 	}
 
 	w, err := e.subscribeSc(finalAddress)
@@ -340,7 +339,7 @@ func (e *ErcHandler) createTx(
 	amount *big.Float,
 	data []byte,
 ) (*types.Transaction, error) {
-	err := account.IsErrStrAddress(address)
+	err := kecacc.IsErrStrAddress(address)
 
 	if err != nil {
 		return nil, err
@@ -353,7 +352,7 @@ func (e *ErcHandler) createTx(
 		return nil, err
 	}
 
-	tx, err := transaction.NewTx(
+	tx, err := kecacc.NewTx(
 		finalAddress,
 		nonce,
 		amount,

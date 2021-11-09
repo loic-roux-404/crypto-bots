@@ -1,16 +1,17 @@
-package transaction
+package kecacc
 
 import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 )
@@ -27,6 +28,9 @@ type Tx struct {
 	Amount      *big.Int
 	Data        []byte
 }
+
+// ErrInvalidTx data
+var ErrInvalidTx = errors.New("Invalid transaction data")
 
 // NewTx prepare transaction requirements
 func NewTx(
@@ -59,21 +63,17 @@ func NewTx(
 // TxIsFrom address
 // TODO validate address / tx hash
 func TxIsFrom(hash common.Hash, address common.Address) (bool, error) {
-
-	publicKeyBytes, err := hex.DecodeString(hash.String())
-
-	if err != nil {
-		println(err)
-		return false, err
+	tx, err := KeccacTx(hash)
+	if !ValidateTx(tx) {
+		return false, ErrInvalidTx
 	}
 
-	sigPublicKey, err := crypto.Ecrecover(address[:], []byte{})
-
+	msg, err := tx.AsMessage(types.NewEIP155Signer(tx.ChainId()), nil)
 	if err != nil {
 		return false, err
 	}
 
-	return bytes.Equal(sigPublicKey, publicKeyBytes), nil
+	return bytes.Equal(msg.From().Bytes(), address.Bytes()), nil
 }
 
 // KeccacTx decode kecacc signer transaction hash string

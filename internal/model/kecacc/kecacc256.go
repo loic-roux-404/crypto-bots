@@ -1,4 +1,4 @@
-package account
+package kecacc
 
 import (
 	"errors"
@@ -13,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
 )
 
 var (
@@ -144,7 +143,7 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 
 // IsTxFromCurrent account
 func (k *KeccacWallet) IsTxFromCurrent(hash common.Hash) (bool, error) {
-	return transaction.TxIsFrom(hash, k.currentAccount.Address)
+	return TxIsFrom(hash, k.currentAccount.Address)
 }
 
 // Account initialized

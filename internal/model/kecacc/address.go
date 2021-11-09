@@ -1,4 +1,4 @@
-package account
+package kecacc
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -37,6 +39,18 @@ func ValidateSc(client *ethclient.Client, address common.Address) (bool, error) 
 	}
 
 	return len(bytecode) > 0, nil
+}
+
+// ValidateTx from tx struct
+// TODO nil tx error
+func ValidateTx(tx *types.Transaction) bool {
+	if tx == nil {
+		return false
+	}
+
+	_, err := hexutil.Decode(tx.Hash().String())
+	println(err)
+    return err == nil
 }
 
 // IsErrAddress validate address but return an error if invalid

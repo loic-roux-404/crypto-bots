@@ -2,25 +2,25 @@ package watcher
 
 import (
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
+	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
 )
 
 // AccSubCallback function passed in subscriber callback
-type AccSubCallback func(tx *transaction.Tx)
+type AccSubCallback func(tx *kecacc.Tx)
 
 // ScSubCallback processed
 type ScSubCallback func(log types.Log)
 
-// Watcher default interface
+// WatcherSc default interface
 type WatcherSc interface {
 	RunEventLoop(callback ScSubCallback)
 }
-
+// WatcherAcc default
 type WatcherAcc interface {
 	RunEventLoop(callback AccSubCallback)
 }
 
-// Use case for generics
+// LogAdapter Use case for generics
 type LogAdapter interface {
 	Log() interface{}
 }
