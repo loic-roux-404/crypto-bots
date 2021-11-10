@@ -49,7 +49,7 @@ func ValidateTx(tx *types.Transaction) bool {
 	}
 
 	_, err := hexutil.Decode(tx.Hash().String())
-	println(err)
+	println("=====",err)
 	return err == nil
 }
 
