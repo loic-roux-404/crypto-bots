@@ -50,7 +50,7 @@ func ValidateTx(tx *types.Transaction) bool {
 
 	_, err := hexutil.Decode(tx.Hash().String())
 	println(err)
-    return err == nil
+	return err == nil
 }
 
 // IsErrAddress validate address but return an error if invalid

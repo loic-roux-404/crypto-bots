@@ -15,6 +15,7 @@ type ScSubCallback func(log types.Log)
 type WatcherSc interface {
 	RunEventLoop(callback ScSubCallback)
 }
+
 // WatcherAcc default
 type WatcherAcc interface {
 	RunEventLoop(callback AccSubCallback)
