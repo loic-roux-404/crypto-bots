@@ -54,7 +54,7 @@ func NewEth() net.Network {
 		log.Fatal(err)
 	}
 
-	acc, err := kecacc.NewErcWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount)
+	acc, err := kecacc.NewWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount, nil)
 
 	if err != nil {
 		log.Fatal(err)

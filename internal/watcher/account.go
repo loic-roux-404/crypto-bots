@@ -41,19 +41,22 @@ func (w *Acc) RunEventLoop(callback AccSubCallback) {
 		case err := <-w.Sub.Err():
 			log.Fatal(err)
 		case vTx := <-w.txs:
-			ok, err := w.acc.IsTxFromCurrent(vTx)
-			if err != nil {
+			ok, err := w.acc.IsTxFromCurrent(vTx); if err != nil {
 				log.Panic(err)
 			}
 
+			log.Printf("Pending : %s", vTx)
+
 			if !ok {
-				return
+				continue
 			}
 
 			tx, err := kecacc.NewTxFromKeccacHash(vTx)
+
 			if err != nil {
 				log.Panic(err)
 			}
+
 			log.Printf("Info: callback on : %s", tx.Hash)
 			callback(tx)
 		}

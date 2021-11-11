@@ -25,7 +25,7 @@ func main() {
 
 	n.SubscribeCurrent().RunEventLoop(func(tx *kecacc.Tx) {
 		log.Printf("Info: Forwarding fee to %s", dest)
-		log.Println(tx)
+		log.Printf("%s", tx.Data)
 		// n.Send(dest, big.NewFloat(0.02))
 	})
 }

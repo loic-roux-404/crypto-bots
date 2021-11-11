@@ -6,21 +6,23 @@ import (
 	"path/filepath"
 
 	"github.com/loic-roux-404/crypto-bots/internal/config"
+	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/spf13/viper"
 )
 
 // ERCConfig of etherum like blockchain
 type ERCConfig struct {
-	ManualFee   bool   `mapstructure:"manualFee"`
-	GasLimit    uint64 `mapstructure:"gasLimit"`
-	GasPrice    int64  `mapstructure:"gasPrice"`
-	Pass        string `mapstructure:"pass"`
-	Keystore    string `mapstructure:"keystore"`
-	Ipc         string `mapstructure:"ipc"`
-	Ws          string `mapstructure:"Ws"`
-	ChainID     int64  `mapstructure:"chainid"`
-	FromAccount string `mapstructure:"fromAccount"`
+	ManualFee   bool                 `mapstructure:"manualFee"`
+	GasLimit    uint64               `mapstructure:"gasLimit"`
+	GasPrice    int64                `mapstructure:"gasPrice"`
+	Pass        string               `mapstructure:"pass"`
+	Keystore    string               `mapstructure:"keystore"`
+	Ipc         string               `mapstructure:"ipc"`
+	Ws          string               `mapstructure:"Ws"`
+	ChainID     int64                `mapstructure:"chainid"`
+	FromAccount string               `mapstructure:"fromAccount"`
+	Wallets     []kecacc.ImportedKey `mapstructure:"wallets"`
 }
 
 // NetCnfID viper cnf id

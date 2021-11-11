@@ -9,7 +9,9 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
@@ -62,24 +64,44 @@ func NewTx(
 
 // TxIsFrom address
 // TODO validate address / tx hash
-func TxIsFrom(hash common.Hash, address common.Address) (bool, error) {
-	tx, err := KeccacTx(hash)
-	if !ValidateTx(tx) {
-		return false, ErrInvalidTx
-	}
+func TxIsFrom(hash common.Hash, signature, publicKeyBytes []byte) (bool, error) {
 
-	msg, err := tx.AsMessage(types.NewEIP155Signer(tx.ChainId()), nil)
+	log.Println(hexutil.Encode(signature))
+	log.Println(signature)
+
+	sigPublicKey, err := crypto.Ecrecover(hash.Bytes(), signature)
+	if err != nil {
+		return false, err
+	}
+	log.Println(sigPublicKey)
+
+	matches := bytes.Equal(sigPublicKey, publicKeyBytes)
+	log.Println(matches)
+
+	sigPublicKeyECDSA, err := crypto.SigToPub(hash.Bytes(), signature)
 	if err != nil {
 		return false, err
 	}
 
-	return bytes.Equal(msg.From().Bytes(), address.Bytes()), nil
+	sigPublicKeyBytes := crypto.FromECDSAPub(sigPublicKeyECDSA)
+	matches = bytes.Equal(sigPublicKeyBytes, publicKeyBytes)
+	log.Println(matches)
+
+	signatureNoRecoverID := signature[:len(signature)-1] // remove recovery id
+	verified := crypto.VerifySignature(publicKeyBytes, hash.Bytes(), signatureNoRecoverID)
+	log.Println(verified)
+
+	return matches, nil
 }
 
 // KeccacTx decode kecacc signer transaction hash string
 func KeccacTx(rawTx common.Hash) (tx *types.Transaction, err error) {
 	rawTxBytes, err := hex.DecodeString(rawTx.String())
-	rlp.DecodeBytes(rawTxBytes, &tx)
+	err = rlp.DecodeBytes(rawTxBytes, &tx)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return tx, err
 }
