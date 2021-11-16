@@ -13,11 +13,13 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/store"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/watcher"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
-	"github.com/loic-roux-404/crypto-bots/internal/model/store"
+	"github.com/loic-roux-404/crypto-bots/internal/model/sub"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
-	"github.com/loic-roux-404/crypto-bots/internal/watcher"
+	"github.com/loic-roux-404/crypto-bots/internal/nets/erc20/clients"
 )
 
 const (
@@ -28,13 +30,13 @@ const (
 
 // errors
 var (
-	errorImpossibleNonce = errors.New("Unable to determine nonce ")
+	ErrImpossibleNonce = errors.New("Unable to determine nonce ")
 )
 
 // ErcHandler Handler config
 type ErcHandler struct {
 	name      string
-	clients   *NodeClients
+	clients   *clients.NodeClients
 	kecacc    *kecacc.KeccacWallet
 	config    *net.ERCConfig
 	contracts map[string]*store.Contract
@@ -48,7 +50,7 @@ func NewEth() net.Network {
 	}
 
 	log.Printf("Info: Connecting to %s...", cnf.Ipc)
-	clients, err := NewClients(cnf.Ipc, cnf.Ws)
+	clients, err := clients.NewClients(cnf.Ipc, cnf.Ws)
 
 	if err != nil {
 		log.Fatal(err)
@@ -188,7 +190,7 @@ func (e *ErcHandler) Load(address string, loadFn store.LoadFn) interface{} {
 
 // Subscribe an address
 // TODO move all in watcher module
-func (e *ErcHandler) Subscribe(address string) watcher.WatcherSc {
+func (e *ErcHandler) Subscribe(address string) sub.Sc {
 	log.Printf("Info: Booting subscriber on: %s", address)
 
 	finalAddress := common.HexToAddress(address)
@@ -213,7 +215,7 @@ func (e *ErcHandler) Subscribe(address string) watcher.WatcherSc {
 }
 
 // SubscribeCurrent account
-func (e *ErcHandler) SubscribeCurrent() watcher.WatcherAcc {
+func (e *ErcHandler) SubscribeCurrent() sub.Acc {
 
 	w, err := e.subscribeAcc(e.kecacc.Account().Address)
 
@@ -239,7 +241,7 @@ func (e *ErcHandler) subscribeSc(address common.Address) (w *watcher.Sc, err err
 }
 
 func (e *ErcHandler) subscribeAcc(address common.Address) (w *watcher.Acc, err error) {
-	w, err = watcher.NewAcc(e.clients.GethWs(), e.kecacc)
+	w, err = watcher.NewAcc(e.clients, e.kecacc)
 
 	if err != nil {
 		return nil, err
@@ -325,7 +327,7 @@ func (e *ErcHandler) getNonce() (*big.Int, error) {
 	finalNonce := new(big.Int).SetUint64(nonce)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error: %s %s", errorImpossibleNonce, err)
+		return nil, fmt.Errorf("Error: %s %s", ErrImpossibleNonce, err)
 	}
 
 	return finalNonce, nil
@@ -368,14 +370,16 @@ func (e *ErcHandler) createTx(
 	// Create new transaction
 	ercTx := types.NewTransaction(
 		tx.Nonce.Uint64(),
-		tx.To,
+		finalAddress,
 		tx.Amount,
 		tx.GasLimit.Uint64(),
 		tx.GasPrice,
 		tx.Data,
 	)
 
-	tx.Hash = ercTx.Hash()
+	log.Println(kecacc.ToRlp(ercTx))
+
+	tx.Hash = ercTx.Hash().String()
 	tx.Log()
 
 	return ercTx, nil

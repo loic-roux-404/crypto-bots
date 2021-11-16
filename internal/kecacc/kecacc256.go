@@ -11,20 +11,16 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
+	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
 )
 
 var (
 	dir = helpers.GetCurrDir()
 )
-
-// ImportedKey config
-type ImportedKey struct {
-	priv string `mapstructure:"priv"`
-	pass string `mapstructure:"pass"`
-}
 
 // KeccacWallet type
 type KeccacWallet struct {
@@ -44,7 +40,7 @@ func NewWallet(
 	pass string,
 	importKs string,
 	fromAcc string,
-	importKeys []ImportedKey,
+	importKeys []wallet.ImportedKey,
 ) (kecacc *KeccacWallet, err error) {
 	if len(pass) <= 0 {
 		return nil, errPassMissing
@@ -135,18 +131,18 @@ func (k *KeccacWallet) addKs(
 }
 
 // AddPrivs key to keystore
-func (k *KeccacWallet) AddPrivs(importKeys []ImportedKey) {
+func (k *KeccacWallet) AddPrivs(importKeys []wallet.ImportedKey) {
 	if importKeys == nil || len(importKeys) <= 0 {
 		return
 	}
 
 	for _, imp := range importKeys {
-		finalPriv, err := crypto.HexToECDSA(imp.priv)
+		finalPriv, err := crypto.HexToECDSA(imp.Priv)
 		if err != nil {
 			log.Printf("Warn: error importing a public key, skipping...")
 			continue
 		}
-		k.keystore.ImportECDSA(finalPriv, imp.pass)
+		k.keystore.ImportECDSA(finalPriv, imp.Pass)
 	}
 }
 
@@ -156,7 +152,7 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 		Address: common.HexToAddress(address),
 	}
 
-	if ValidateAddress(fromAccDef) {
+	if ValidateAccAddress(fromAccDef) {
 		return fmt.Errorf("%s : %s", ErrAccInvalid, address)
 	}
 
@@ -172,14 +168,8 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 }
 
 // IsTxFromCurrent account
-func (k *KeccacWallet) IsTxFromCurrent(hash common.Hash) (bool, error) {
-	signature, err := k.keystore.SignHash(k.currentAccount, hash.Bytes())
-
-	if err != nil {
-		return false, err
-	}
-
-	return TxIsFrom(hash, signature, k.currentAccount.Address[3:])
+func (k *KeccacWallet) IsTxFromCurrent(tx *types.Transaction) (bool, error) {
+	return TxIsFrom(tx, k.currentAccount.Address)
 }
 
 // Account initialized

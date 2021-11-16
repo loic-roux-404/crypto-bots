@@ -6,22 +6,23 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 
-	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/model/sub"
+	"github.com/loic-roux-404/crypto-bots/internal/nets/erc20/clients"
 )
 
 // Acc type
 type Acc struct {
-	gethClient *gethclient.Client
+	clients    *clients.NodeClients
 	Sub        ethereum.Subscription
 	txs        chan common.Hash
 	acc        *kecacc.KeccacWallet
 }
 
 // NewAcc for a specific query (need websocket connection)
-func NewAcc(ws *gethclient.Client, acc *kecacc.KeccacWallet) (w *Acc, err error) {
-	w = &Acc{gethClient: ws, acc: acc}
+func NewAcc(clients *clients.NodeClients, acc *kecacc.KeccacWallet) (w *Acc, err error) {
+	w = &Acc{clients: clients, acc: acc}
 	sub, txs, err := w.sub()
 
 	if err != nil {
@@ -35,30 +36,29 @@ func NewAcc(ws *gethclient.Client, acc *kecacc.KeccacWallet) (w *Acc, err error)
 }
 
 // RunEventLoop launch
-func (w *Acc) RunEventLoop(callback AccSubCallback) {
+func (w *Acc) RunEventLoop(callback sub.AccSubCallback) {
 	for {
 		select {
 		case err := <-w.Sub.Err():
 			log.Fatal(err)
 		case vTx := <-w.txs:
-			ok, err := w.acc.IsTxFromCurrent(vTx); if err != nil {
+			tx, _, _ := w.clients.EthRPC().TransactionByHash(context.Background(), vTx)
+			ok, err := w.acc.IsTxFromCurrent(tx); if err != nil {
 				log.Panic(err)
 			}
-
-			log.Printf("Pending : %s", vTx)
 
 			if !ok {
 				continue
 			}
 
-			tx, err := kecacc.NewTxFromKeccacHash(vTx)
+			finalTx := kecacc.FromKeccacTx(tx)
 
 			if err != nil {
 				log.Panic(err)
 			}
 
-			log.Printf("Info: callback on : %s", tx.Hash)
-			callback(tx)
+			log.Printf("Info: callback on : %s", vTx)
+			callback(finalTx)
 		}
 	}
 }
@@ -67,7 +67,7 @@ func (w *Acc) RunEventLoop(callback AccSubCallback) {
 func (w *Acc) sub() (ethereum.Subscription, chan common.Hash, error) {
 
 	txs := make(chan common.Hash)
-	sub, err := w.gethClient.SubscribePendingTransactions(context.Background(), txs)
+	sub, err := w.clients.GethWs().SubscribePendingTransactions(context.Background(), txs)
 
 	if err != nil {
 		return nil, nil, err

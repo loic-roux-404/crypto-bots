@@ -20,10 +20,15 @@ var (
 )
 
 // ValidateAddress destination
-func ValidateAddress(acc accounts.Account) bool {
+func ValidateAddress(address common.Address) bool {
 	re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 
-	return re.MatchString(acc.Address.String())
+	return re.MatchString(address.String())
+}
+
+// ValidateAccAddress destination
+func ValidateAccAddress(acc accounts.Account) bool {
+	return ValidateAddress(acc.Address)
 }
 
 // ValidateSc check if it's a smart contract
@@ -57,7 +62,7 @@ func IsErrAddress(address common.Address) error {
 	acc := accounts.Account{
 		Address: address,
 	}
-	isValidAd := ValidateAddress(acc)
+	isValidAd := ValidateAccAddress(acc)
 
 	if isValidAd {
 		return nil

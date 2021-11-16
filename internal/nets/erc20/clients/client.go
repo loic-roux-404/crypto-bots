@@ -1,4 +1,4 @@
-package erc20
+package clients
 
 import (
 	"github.com/ethereum/go-ethereum/ethclient"

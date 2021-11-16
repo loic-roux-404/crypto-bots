@@ -10,6 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
+
+	"github.com/loic-roux-404/crypto-bots/internal/model/sub"
 )
 
 // Sc type
@@ -37,7 +39,7 @@ func NewSc(ws *ethclient.Client, q ethereum.FilterQuery) (*Sc, error) {
 }
 
 // RunEventLoop launch
-func (w *Sc) RunEventLoop(callback ScSubCallback) {
+func (w *Sc) RunEventLoop(callback sub.ScSubCallback) {
 	for {
 		select {
 		case err := <-w.Sub.Err():

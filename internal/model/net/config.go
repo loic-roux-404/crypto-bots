@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/loic-roux-404/crypto-bots/internal/config"
-	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
 	"github.com/spf13/viper"
 )
 
@@ -22,7 +22,7 @@ type ERCConfig struct {
 	Ws          string               `mapstructure:"Ws"`
 	ChainID     int64                `mapstructure:"chainid"`
 	FromAccount string               `mapstructure:"fromAccount"`
-	Wallets     []kecacc.ImportedKey `mapstructure:"wallets"`
+	Wallets     []wallet.ImportedKey `mapstructure:"wallets"`
 }
 
 // NetCnfID viper cnf id
@@ -54,7 +54,7 @@ func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error) {
 	if cnf.Ipc == "" {
 		return nil, ErrIpcNotConfigured
 	}
-
+	// TODO switch case on fee system
 	cnf.GasPrice = token.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
 
 	return cnf, nil
