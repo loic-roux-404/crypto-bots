@@ -1,4 +1,4 @@
-package account
+package kecacc
 
 import (
 	"errors"
@@ -11,9 +11,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
+	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
 )
 
 var (
@@ -24,6 +26,7 @@ var (
 type KeccacWallet struct {
 	keystore       *keystore.KeyStore
 	currentAccount accounts.Account
+	pass           string
 }
 
 var (
@@ -32,8 +35,13 @@ var (
 	errAccNotFound = errors.New("No account in keystore : ")
 )
 
-// NewErcWallet kecacc
-func NewErcWallet(pass string, importKs string, fromAcc string) (*KeccacWallet, error) {
+// NewWallet kecacc
+func NewWallet(
+	pass string,
+	importKs string,
+	fromAcc string,
+	importKeys []wallet.ImportedKey,
+) (kecacc *KeccacWallet, err error) {
 	if len(pass) <= 0 {
 		return nil, errPassMissing
 	}
@@ -44,10 +52,11 @@ func NewErcWallet(pass string, importKs string, fromAcc string) (*KeccacWallet, 
 		keystore.StandardScryptP,
 	)
 
-	kecacc := &KeccacWallet{keystore: ks, currentAccount: accounts.Account{}}
+	kecacc = &KeccacWallet{keystore: ks, currentAccount: accounts.Account{}, pass: pass}
 
-	err := kecacc.initAccount(pass, importKs)
+	kecacc.AddPrivs(importKeys)
 
+	err = kecacc.initAccount(pass, importKs)
 	if err != nil {
 		return nil, err
 	}
@@ -121,13 +130,29 @@ func (k *KeccacWallet) addKs(
 	return acc, nil
 }
 
+// AddPrivs key to keystore
+func (k *KeccacWallet) AddPrivs(importKeys []wallet.ImportedKey) {
+	if importKeys == nil || len(importKeys) <= 0 {
+		return
+	}
+
+	for _, imp := range importKeys {
+		finalPriv, err := crypto.HexToECDSA(imp.Priv)
+		if err != nil {
+			log.Printf("Warn: error importing a public key, skipping...")
+			continue
+		}
+		k.keystore.ImportECDSA(finalPriv, imp.Pass)
+	}
+}
+
 func (k *KeccacWallet) changeCurrAcc(address string) error {
 	// Create account definitions
 	fromAccDef := accounts.Account{
 		Address: common.HexToAddress(address),
 	}
 
-	if ValidateAddress(fromAccDef) {
+	if ValidateAccAddress(fromAccDef) {
 		return fmt.Errorf("%s : %s", ErrAccInvalid, address)
 	}
 
@@ -143,8 +168,8 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 }
 
 // IsTxFromCurrent account
-func (k *KeccacWallet) IsTxFromCurrent(hash common.Hash) (bool, error) {
-	return transaction.TxIsFrom(hash, k.currentAccount.Address)
+func (k *KeccacWallet) IsTxFromCurrent(tx *types.Transaction) (bool, error) {
+	return TxIsFrom(tx, k.currentAccount.Address)
 }
 
 // Account initialized

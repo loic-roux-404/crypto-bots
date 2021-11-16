@@ -7,20 +7,22 @@ import (
 
 	"github.com/loic-roux-404/crypto-bots/internal/config"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
 	"github.com/spf13/viper"
 )
 
 // ERCConfig of etherum like blockchain
 type ERCConfig struct {
-	ManualFee   bool   `mapstructure:"manualFee"`
-	GasLimit    uint64 `mapstructure:"gasLimit"`
-	GasPrice    int64  `mapstructure:"gasPrice"`
-	Pass        string `mapstructure:"pass"`
-	Keystore    string `mapstructure:"keystore"`
-	Ipc         string `mapstructure:"ipc"`
-	Ws          string `mapstructure:"Ws"`
-	ChainID     int64  `mapstructure:"chainid"`
-	FromAccount string `mapstructure:"fromAccount"`
+	ManualFee   bool                 `mapstructure:"manualFee"`
+	GasLimit    uint64               `mapstructure:"gasLimit"`
+	GasPrice    int64                `mapstructure:"gasPrice"`
+	Pass        string               `mapstructure:"pass"`
+	Keystore    string               `mapstructure:"keystore"`
+	Ipc         string               `mapstructure:"ipc"`
+	Ws          string               `mapstructure:"Ws"`
+	ChainID     int64                `mapstructure:"chainid"`
+	FromAccount string               `mapstructure:"fromAccount"`
+	Wallets     []wallet.ImportedKey `mapstructure:"wallets"`
 }
 
 // NetCnfID viper cnf id
@@ -52,7 +54,7 @@ func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error) {
 	if cnf.Ipc == "" {
 		return nil, ErrIpcNotConfigured
 	}
-
+	// TODO switch case on fee system
 	cnf.GasPrice = token.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
 
 	return cnf, nil

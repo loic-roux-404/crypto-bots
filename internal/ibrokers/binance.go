@@ -70,7 +70,7 @@ func (*BinanceHandler) GetRoi(order BrokerOperationResponse) (int, error) {
 
 func orderSymbol(
 	client *binance.Client,
-	token *token.Pair,
+	token token.Pair,
 	sideType binance.SideType,
 	orderType binance.OrderType,
 ) (*binance.CreateOrderResponse, error) {

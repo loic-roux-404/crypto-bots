@@ -19,6 +19,11 @@
     - [ ] Block observation
 - [ ] Secrets using decentralized secrets store [nucypher](https://www.nucypher.com/)
 - [ ] git ignore ropsten wallet
+
+#### Ui
+
+- [ ] Web ui for bot configuration and launch strategy
+
 #### Exchanges related
 
 - [ ] Listing of twitter exchange messages (WIP)
@@ -42,6 +47,7 @@
 ##### Refacto
 
 - [x] move errors in return to panic and handle with panic
+- [ ] Tx adapter for chain with gas or no gas (pow / pos / zk-snarks)
 
 ### Backtest config
 
@@ -49,6 +55,7 @@ DEX :
 - [ ] SRM
 - [ ] uniswapv3
 - [ ] Pancakeswap
+- [ ] Pangolin
 
 Nets : 
 - [x] (erc20) find testnet connection

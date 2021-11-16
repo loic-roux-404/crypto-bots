@@ -4,8 +4,8 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/loic-roux-404/crypto-bots/internal/model/store"
-	"github.com/loic-roux-404/crypto-bots/internal/watcher"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/store"
+	"github.com/loic-roux-404/crypto-bots/internal/model/sub"
 )
 
 // Network type
@@ -23,7 +23,7 @@ type Network interface {
 	// Deploy smart contract from abi generated function
 	Deploy(input string, storeDeployFn store.DeployFn) interface{}
 	// Smart contract events
-	Subscribe(address string) watcher.WatcherSc
+	Subscribe(address string) sub.Sc
 	// Account subscribe
-	SubscribeCurrent() watcher.WatcherAcc
+	SubscribeCurrent() sub.Acc
 }

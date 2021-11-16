@@ -19,5 +19,5 @@ func main() {
 	template.ExecuteNetCmd()
 	n := networks.GetNetwork("erc20")
 
-	n.Send("0xD4b2ae5560F8905fa4bb5C7f04122117A639B43d", big.NewFloat(0.02))
+	n.Send("0xBe20D507fbdD6dAFd7a2ddE95c2d3f4618547F17", big.NewFloat(0.02))
 }
