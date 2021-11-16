@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/loic-roux-404/crypto-bots/cmd/bot/template"
-	"github.com/loic-roux-404/crypto-bots/internal/model/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/model/tx"
 	"github.com/loic-roux-404/crypto-bots/pkg/networks"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ func main() {
 	n := networks.GetNetwork("erc20")
 	dest := "0xBe20D507fbdD6dAFd7a2ddE95c2d3f4618547F17"
 
-	n.SubscribeCurrent().RunEventLoop(func(tx *kecacc.Tx) {
+	n.SubscribeCurrent().RunEventLoop(func(tx *tx.Adapter) {
 		log.Printf("Info: Forwarding fee to %s", dest)
 		tx.Log()
 	})

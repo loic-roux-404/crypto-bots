@@ -43,6 +43,7 @@ func (w *Acc) RunEventLoop(callback sub.AccSubCallback) {
 			log.Fatal(err)
 		case vTx := <-w.txs:
 			tx, _, _ := w.clients.EthRPC().TransactionByHash(context.Background(), vTx)
+
 			ok, err := w.acc.IsTxFromCurrent(tx); if err != nil {
 				log.Panic(err)
 			}
