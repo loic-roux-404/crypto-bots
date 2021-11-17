@@ -54,7 +54,8 @@ func TxIsFrom(tx *types.Transaction, address common.Address) (bool, error) {
 		return false, ErrNilErcTx
 	}
 
-	err := IsErrAddress(address); if err != nil {
+	err := IsErrAddress(address)
+	if err != nil {
 		return false, err
 	}
 

@@ -6,8 +6,8 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-// NodeClients store
-type NodeClients struct {
+// NodeErcClients store
+type NodeErcClients struct {
 	Ws  *rpc.Client
 	Ipc *rpc.Client
 }
@@ -16,8 +16,8 @@ type NodeClients struct {
 // TODO save memory with
 // - ws non connect
 // - store instances
-func NewClients(ipc string, ws string) (nc *NodeClients, err error) {
-	nc = &NodeClients{}
+func NewClients(ipc string, ws string) (nc *NodeErcClients, err error) {
+	nc = &NodeErcClients{}
 	nc.Ipc, err = rpc.Dial(ipc)
 	if err != nil {
 		return nil, err
@@ -32,21 +32,21 @@ func NewClients(ipc string, ws string) (nc *NodeClients, err error) {
 }
 
 // GethRPC gethclient
-func (nc *NodeClients) GethRPC() *gethclient.Client {
+func (nc *NodeErcClients) GethRPC() *gethclient.Client {
 	return gethclient.New(nc.Ipc)
 }
 
 // EthRPC ethclient
-func (nc *NodeClients) EthRPC() *ethclient.Client {
+func (nc *NodeErcClients) EthRPC() *ethclient.Client {
 	return ethclient.NewClient(nc.Ipc)
 }
 
 // EthWs ethclient for websocket
-func (nc *NodeClients) EthWs() *ethclient.Client {
+func (nc *NodeErcClients) EthWs() *ethclient.Client {
 	return ethclient.NewClient(nc.Ws)
 }
 
 // GethWs ethclient for websocket
-func (nc *NodeClients) GethWs() *gethclient.Client {
+func (nc *NodeErcClients) GethWs() *gethclient.Client {
 	return gethclient.New(nc.Ws)
 }

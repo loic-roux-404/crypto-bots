@@ -14,14 +14,14 @@ import (
 
 // Acc type
 type Acc struct {
-	clients    *clients.NodeClients
-	Sub        ethereum.Subscription
-	txs        chan common.Hash
-	acc        *kecacc.KeccacWallet
+	clients *clients.NodeErcClients
+	Sub     ethereum.Subscription
+	txs     chan common.Hash
+	acc     *kecacc.KeccacWallet
 }
 
 // NewAcc for a specific query (need websocket connection)
-func NewAcc(clients *clients.NodeClients, acc *kecacc.KeccacWallet) (w *Acc, err error) {
+func NewAcc(clients *clients.NodeErcClients, acc *kecacc.KeccacWallet) (w *Acc, err error) {
 	w = &Acc{clients: clients, acc: acc}
 	sub, txs, err := w.sub()
 
@@ -44,7 +44,8 @@ func (w *Acc) RunEventLoop(callback sub.AccSubCallback) {
 		case vTx := <-w.txs:
 			tx, _, _ := w.clients.EthRPC().TransactionByHash(context.Background(), vTx)
 
-			ok, err := w.acc.IsTxFromCurrent(tx); if err != nil {
+			ok, err := w.acc.IsTxFromCurrent(tx)
+			if err != nil {
 				log.Panic(err)
 			}
 

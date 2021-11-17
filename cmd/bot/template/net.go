@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	// NetCnfIDDefault default network name to load
-	NetCnfIDDefault = "ropsten"
+	// NetNameDefault default network name to load
+	NetNameDefault = "ropsten"
+	// NetChainDefault default blockchain
+	NetChainDefault = "erc20"
 	// CnfFileID config location
 	CnfFileID = "config"
 	// CnfFileIDDefault file
@@ -41,14 +43,22 @@ func InitNetCmd(infos *cobra.Command) {
 		CnfFileIDDefault,
 		fmt.Sprintf("user config file (default is %s)", CnfFileIDDefault),
 	)
-	// Network choice
+	// Network type choice
 	genCmd.PersistentFlags().StringP(
-		net.NetCnfID,
-		"n",
-		NetCnfIDDefault,
-		"ERC_20 like network id to load, default depending of chain type",
+		net.NetChainType,
+		"c",
+		NetChainDefault,
+		"Blockchain name, available : erc20 / bep20",
 	)
-	viper.BindPFlag(net.NetCnfID, genCmd.PersistentFlags().Lookup(net.NetCnfID))
+	viper.BindPFlag(net.NetChainType, genCmd.PersistentFlags().Lookup(net.NetChainType))
+	// Network environment choice
+	genCmd.PersistentFlags().StringP(
+		net.NetName,
+		"n",
+		"",
+		"Network to load, default depending of chain type",
+	)
+	viper.BindPFlag(net.NetName, genCmd.PersistentFlags().Lookup(net.NetName))
 	// Keystorefile location
 	genCmd.PersistentFlags().StringP(
 		keystoreID,
@@ -62,14 +72,14 @@ func InitNetCmd(infos *cobra.Command) {
 	genCmd.PersistentFlags().Bool(manualID, false, "Disable automatic gas estimation")
 	viper.BindPFlag(manualID, genCmd.PersistentFlags().Lookup(manualID))
 	// Chainid
-	genCmd.PersistentFlags().Int16P(
-		chainid,
-		"i",
-		3,
-		"Chain id",
-	)
-	genCmd.MarkPersistentFlagRequired(chainid)
-	viper.BindPFlag(chainid, genCmd.PersistentFlags().Lookup(chainid))
+	// genCmd.PersistentFlags().Int16P(
+	// 	chainid,
+	// 	"i",
+	// 	3,
+	// 	"Chain id",
+	// )
+	// genCmd.MarkPersistentFlagRequired(chainid)
+	// viper.BindPFlag(chainid, genCmd.PersistentFlags().Lookup(chainid))
 	// Account password
 	genCmd.PersistentFlags().StringP(
 		pass,
