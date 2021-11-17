@@ -24,8 +24,8 @@ import (
 
 const (
 	// ErcNetName identifier
-	ErcNetName  = "erc20"
-	defaultNode = "ropsten"
+	ErcNetName = "erc20"
+	DefaultNet = "ropsten"
 )
 
 // errors
@@ -35,19 +35,15 @@ var (
 
 // ErcHandler Handler config
 type ErcHandler struct {
-	name      string
-	clients   *clients.NodeClients
+	Name      string
+	clients   *clients.NodeErcClients
 	kecacc    *kecacc.KeccacWallet
-	config    *net.ERCConfig
+	config    *net.Config
 	contracts map[string]*store.Contract
 }
 
 // NewEth create etherum handler
-func NewEth() net.Network {
-	cnf, err := net.NewERCConfig(ErcNetName, defaultNode)
-	if err != nil {
-		log.Fatal(err)
-	}
+func NewEth(cnf *net.Config) net.Network {
 
 	log.Printf("Info: Connecting to %s...", cnf.Ipc)
 	clients, err := clients.NewClients(cnf.Ipc, cnf.Ws)
@@ -63,7 +59,7 @@ func NewEth() net.Network {
 	}
 
 	return &ErcHandler{
-		name:      ErcNetName,
+		Name:      ErcNetName,
 		kecacc:    acc,
 		clients:   clients,
 		config:    cnf,
@@ -73,10 +69,7 @@ func NewEth() net.Network {
 
 // Send transaction to address
 // Central function which need defer after the call
-func (e *ErcHandler) Send(
-	address string,
-	amount *big.Float,
-) (hash common.Hash) {
+func (e *ErcHandler) Send(address string, amount *big.Float) string {
 	defer helpers.RecoverAndLog()
 	nonce, err := e.getNonce()
 
@@ -97,7 +90,7 @@ func (e *ErcHandler) Send(
 		panic(err)
 	}
 
-	return sentTx
+	return sentTx.String()
 }
 
 // Update transaction
@@ -106,7 +99,7 @@ func (e *ErcHandler) Update(
 	nonce *big.Int,
 	address string,
 	amount *big.Float,
-) (hash common.Hash) {
+) string {
 	defer helpers.RecoverAndLog()
 	// Create new transaction
 	tx, err := e.createTx(address, nonce, amount, nil)
@@ -121,11 +114,11 @@ func (e *ErcHandler) Update(
 		panic(err)
 	}
 
-	return sentTx
+	return sentTx.String()
 }
 
 // Cancel cancel transaction
-func (e *ErcHandler) Cancel(nonce *big.Int) common.Hash {
+func (e *ErcHandler) Cancel(nonce *big.Int) string {
 	defer helpers.RecoverAndLog()
 	tx, err := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
 
@@ -139,7 +132,7 @@ func (e *ErcHandler) Cancel(nonce *big.Int) common.Hash {
 		panic(err)
 	}
 
-	return sentTx
+	return sentTx.String()
 }
 
 // Deploy a smart contract api function
@@ -204,7 +197,9 @@ func (e *ErcHandler) Subscribe(address string) sub.Sc {
 		panic(kecacc.ErrScInvalid)
 	}
 
-	w, err := e.subscribeSc(finalAddress)
+	w, err := watcher.NewSc(e.clients.EthWs(), ethereum.FilterQuery{
+		Addresses: []common.Address{common.HexToAddress(address)},
+	})
 
 	if err != nil {
 		panic(err)
@@ -216,38 +211,13 @@ func (e *ErcHandler) Subscribe(address string) sub.Sc {
 
 // SubscribeCurrent account
 func (e *ErcHandler) SubscribeCurrent() sub.Acc {
-
-	w, err := e.subscribeAcc(e.kecacc.Account().Address)
+	w, err := watcher.NewAcc(e.clients, e.kecacc)
 
 	if err != nil {
 		panic(err)
 	}
 
 	return w
-}
-
-func (e *ErcHandler) subscribeSc(address common.Address) (w *watcher.Sc, err error) {
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{address},
-	}
-
-	w, err = watcher.NewSc(e.clients.EthWs(), query)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return w, nil
-}
-
-func (e *ErcHandler) subscribeAcc(address common.Address) (w *watcher.Acc, err error) {
-	w, err = watcher.NewAcc(e.clients, e.kecacc)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return w, nil
 }
 
 func (e *ErcHandler) signAndBroadcast(tx *types.Transaction) (common.Hash, error) {

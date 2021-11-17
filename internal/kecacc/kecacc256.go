@@ -111,7 +111,7 @@ func (k *KeccacWallet) addKs(
 		acc, err := k.keystore.Import(jsonBytes, pass, pass)
 
 		if err != keystore.ErrAccountAlreadyExists {
-			log.Printf("Warning: %s", err)
+			log.Printf("Warning: %s", err.Error())
 		}
 
 		return acc, nil
