@@ -1,4 +1,6 @@
 ipc: https://speedy-nodes-nyc.moralis.io/98f3eee229858647b2d10b5b/bsc/testnet
+ws: wss://speedy-nodes-nyc.moralis.io/98f3eee229858647b2d10b5b/bsc/mainnet/ws
 chainid: 97
+keystore: wallets/default_keystore.json
 gasLimit: 21000
 gasPrice: 8
