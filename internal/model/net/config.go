@@ -6,13 +6,16 @@ import (
 	"path/filepath"
 
 	"github.com/loic-roux-404/crypto-bots/internal/config"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
 	"github.com/spf13/viper"
 )
 
-// ERCConfig of etherum like blockchain
-type ERCConfig struct {
+// Config of etherum like blockchain
+type Config struct {
+	NetName     string               `mapstructure:"network"`
+	ChainName   string               `mapstructure:"chain"`
 	ManualFee   bool                 `mapstructure:"manualFee"`
 	GasLimit    uint64               `mapstructure:"gasLimit"`
 	GasPrice    int64                `mapstructure:"gasPrice"`
@@ -25,28 +28,30 @@ type ERCConfig struct {
 	Wallets     []wallet.ImportedKey `mapstructure:"wallets"`
 }
 
-// NetCnfID viper cnf id
-const NetCnfID = "network"
+// NetChainType viper cnf id
+const (
+	NetChainType   = "chain"
+	NetName        = "network"
+)
 
 var (
 	// ErrIpcNotConfigured no ipc
 	ErrIpcNotConfigured = errors.New("No IPC url configured")
 )
 
-// NewERCConfig create erc like blockchain handler
-func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error) {
-
-	if len(viper.GetString(NetCnfID)) <= 0 {
-		viper.Set(NetCnfID, defaultNode)
+// NewNetConfig create erc like blockchain handler
+func NewNetConfig(defaults helpers.Map) (*Config, error) {
+	if len(viper.GetString(NetName)) <= 0 {
+		viper.Set(NetName, defaults[viper.GetString(NetChainType)])
 	}
 
-	cnfLoc := filepath.Join(NetCnfID, networkID)
+	cnfLoc := filepath.Join(NetChainType, viper.GetString(NetChainType))
 
 	var cnfLocations = map[string]string{
-		cnfLoc: viper.GetString(NetCnfID),
+		cnfLoc: viper.GetString(NetName),
 	}
 
-	cnf := &ERCConfig{}
+	cnf := &Config{}
 	// Search config in files
 	config.Get(cnf, cnfLocations)
 	// TODO override configs with flags

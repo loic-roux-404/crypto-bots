@@ -14,14 +14,14 @@ import (
 
 // Acc type
 type Acc struct {
-	clients    *clients.NodeClients
+	clients    *clients.NodeErcClients
 	Sub        ethereum.Subscription
 	txs        chan common.Hash
 	acc        *kecacc.KeccacWallet
 }
 
 // NewAcc for a specific query (need websocket connection)
-func NewAcc(clients *clients.NodeClients, acc *kecacc.KeccacWallet) (w *Acc, err error) {
+func NewAcc(clients *clients.NodeErcClients, acc *kecacc.KeccacWallet) (w *Acc, err error) {
 	w = &Acc{clients: clients, acc: acc}
 	sub, txs, err := w.sub()
 
