@@ -1,4 +1,4 @@
-package template
+package core
 
 import (
 	"fmt"
@@ -28,8 +28,9 @@ const (
 // genCmd generate command info
 var genCmd *cobra.Command
 
-// InitNetCmd use in init() function in your cli impl
-func InitNetCmd(infos *cobra.Command) {
+// InitChainCmd use in init() function in your cli impl
+// Dedicated to on chain system custom strategy
+func InitChainCmd(infos *cobra.Command) {
 	var (
 		// CfgFile location
 		CfgFile string
@@ -71,15 +72,6 @@ func InitNetCmd(infos *cobra.Command) {
 	// Auto gas
 	genCmd.PersistentFlags().Bool(manualID, false, "Disable automatic gas estimation")
 	viper.BindPFlag(manualID, genCmd.PersistentFlags().Lookup(manualID))
-	// Chainid
-	// genCmd.PersistentFlags().Int16P(
-	// 	chainid,
-	// 	"i",
-	// 	3,
-	// 	"Chain id",
-	// )
-	// genCmd.MarkPersistentFlagRequired(chainid)
-	// viper.BindPFlag(chainid, genCmd.PersistentFlags().Lookup(chainid))
 	// Account password
 	genCmd.PersistentFlags().StringP(
 		pass,

