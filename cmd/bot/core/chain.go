@@ -21,7 +21,6 @@ const (
 	// Flags
 	keystoreID = "keystore"
 	manualID   = "manualFee"
-	chainid    = "chainid"
 	pass       = "pass"
 )
 
@@ -77,7 +76,7 @@ func InitChainCmd(infos *cobra.Command) {
 		pass,
 		"p",
 		"",
-		"Account Password",
+		"Account keystore Password",
 	)
 	genCmd.MarkPersistentFlagRequired(pass)
 	viper.BindPFlag(pass, genCmd.PersistentFlags().Lookup(pass))
