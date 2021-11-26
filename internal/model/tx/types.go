@@ -19,6 +19,7 @@ type Adapter struct {
 	TokenAmount *big.Float
 	Amount      *big.Int
 	Data        []byte
+	Adapted		interface{}
 }
 
 // Log transaction in json

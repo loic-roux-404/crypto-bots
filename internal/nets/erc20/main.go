@@ -14,11 +14,11 @@ import (
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/fees"
 	"github.com/loic-roux-404/crypto-bots/internal/kecacc/store"
 	"github.com/loic-roux-404/crypto-bots/internal/kecacc/watcher"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/internal/model/sub"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
 	"github.com/loic-roux-404/crypto-bots/internal/nets/erc20/clients"
 )
 
@@ -52,7 +52,7 @@ func NewEth(cnf *net.Config) net.Network {
 		log.Fatal(err)
 	}
 
-	acc, err := kecacc.NewWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount, nil)
+	acc, err := kecacc.NewWallet(cnf.Pass, cnf.Keystore, cnf.FromAddress, cnf.Wallets)
 
 	if err != nil {
 		log.Fatal(err)
@@ -126,9 +126,7 @@ func (e *ErcHandler) Cancel(nonce *big.Int) string {
 		panic(err)
 	}
 
-	sentTx, err := e.signAndBroadcast(tx)
-
-	if err != nil {
+	sentTx, err := e.signAndBroadcast(tx); if err != nil {
 		panic(err)
 	}
 
@@ -188,13 +186,9 @@ func (e *ErcHandler) Subscribe(address string) sub.Sc {
 
 	finalAddress := common.HexToAddress(address)
 
-	isSc, err := kecacc.ValidateSc(e.clients.EthRPC(), finalAddress)
+	_, err := kecacc.ValidateSc(e.clients.EthRPC(), finalAddress)
 	if err != nil {
 		panic(err)
-	}
-
-	if !isSc {
-		panic(kecacc.ErrScInvalid)
 	}
 
 	w, err := watcher.NewSc(e.clients.EthWs(), ethereum.FilterQuery{
@@ -206,7 +200,6 @@ func (e *ErcHandler) Subscribe(address string) sub.Sc {
 	}
 
 	return w
-
 }
 
 // SubscribeCurrent account
@@ -337,22 +330,11 @@ func (e *ErcHandler) createTx(
 		return nil, err
 	}
 
-	// Create new transaction
-	ercTx := types.NewTransaction(
-		tx.Nonce.Uint64(),
-		finalAddress,
-		tx.Amount,
-		tx.GasLimit.Uint64(),
-		tx.GasPrice,
-		tx.Data,
-	)
+	log.Println(kecacc.ToRlp(tx.Adapted.(*types.Transaction)))
 
-	log.Println(kecacc.ToRlp(ercTx))
-
-	tx.Hash = ercTx.Hash().String()
 	tx.Log()
 
-	return ercTx, nil
+	return tx.Adapted.(*types.Transaction), nil
 }
 
 func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
@@ -373,7 +355,7 @@ func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
 		return nil, err
 	}
 
-	auth.Value = token.ToWei(big.NewFloat(0.00))
+	auth.Value = fees.ToWei(big.NewFloat(0.00))
 	auth.GasLimit = e.config.GasLimit
 	auth.GasPrice = big.NewInt(e.config.GasPrice)
 

@@ -89,6 +89,7 @@ func TestTxIsFrom(t *testing.T) {
 			t.Fatalf("FAIL: %s \nExpected: %t\nActual: %t\nErr: %s",
 				testCase.description, testCase.expected, res, err)
 		}
+
 		t.Logf("PASS: %s", testCase.description)
 	}
 }

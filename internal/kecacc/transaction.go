@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/fees"
 	"github.com/loic-roux-404/crypto-bots/internal/model/tx"
 )
 
@@ -17,7 +17,8 @@ import (
 var (
 	ErrInvalidTx = errors.New("Invalid transaction data")
 	ErrEmptyRaw  = errors.New("Empty raw transaction")
-	ErrNilErcTx  = errors.New("Empty erc transaction struct")
+	ErrNilKeccacTx  = errors.New("Empty erc transaction struct")
+	ErrFailedKeccacTx  = errors.New("Failed to create erc tx struct")
 )
 
 // NewTx prepare transaction requirements
@@ -34,10 +35,25 @@ func NewTx(
 		data = []byte{}
 	}
 
-	finalAmount := token.ToWei(amount)
+	finalAmount := fees.ToWei(amount)
 
+	ercTx := types.NewTransaction(
+		nonce.Uint64(),
+		to,
+		finalAmount,
+		gasLimit.Uint64(),
+		gasPrice,
+		data,
+	)
+
+	// Paranoiac
+	if ercTx == nil {
+		return nil, ErrNilKeccacTx
+	}
+
+	// TODO add more validation on tx
 	return &tx.Adapter{
-		Hash:        "", // empty hash for non broadcasted tx
+		Hash:        ercTx.Hash().String(), // empty hash for non broadcasted tx
 		To:          to.Hex(),
 		Nonce:       nonce,
 		TokenAmount: amount,
@@ -45,13 +61,14 @@ func NewTx(
 		GasLimit:    gasLimit,
 		GasPrice:    gasPrice,
 		Data:        data,
+		Adapted: 	 ercTx,
 	}, nil
 }
 
 // TxIsFrom address
 func TxIsFrom(tx *types.Transaction, address common.Address) (bool, error) {
 	if tx == nil {
-		return false, ErrNilErcTx
+		return false, ErrNilKeccacTx
 	}
 
 	err := IsErrAddress(address)
@@ -82,8 +99,7 @@ func KeccacTxFromRaw(rawTx string) (*types.Transaction, error) {
 		return nil, err
 	}
 
-	err = rlp.DecodeBytes(rawTxBytes, &tx)
-	if err != nil {
+	err = rlp.DecodeBytes(rawTxBytes, &tx); if err != nil {
 		return nil, err
 	}
 
@@ -98,7 +114,7 @@ func FromKeccacTx(keccacTx *types.Transaction) *tx.Adapter {
 		Nonce:       new(big.Int).SetUint64(keccacTx.Nonce()),
 		GasLimit:    nil,
 		GasPrice:    keccacTx.GasPrice(),
-		TokenAmount: token.FromWei(keccacTx.Value()),
+		TokenAmount: fees.WeiToDecimal(keccacTx.Value()),
 		Amount:      keccacTx.Value(),
 		Data:        keccacTx.Data(),
 	}

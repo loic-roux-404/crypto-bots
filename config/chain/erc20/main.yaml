@@ -1,5 +1,6 @@
-ipc: "" # TODO
+ipc: ""
+ws: ""
 chainid: 1
+keystore: wallets/default_keystore.json
 gasLimit: 21000
-gasPrice: 8
-derivationPath: "m/44'/60'/0'/0"
+gasPrice: 30

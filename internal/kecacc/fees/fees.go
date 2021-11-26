@@ -1,4 +1,4 @@
-package token
+package fees
 
 import (
 	"fmt"
@@ -21,12 +21,18 @@ func ToWei(eth *big.Float) *big.Int {
 	return wei
 }
 
-// FromWei to native chain token
-func FromWei(value *big.Int) *big.Float {
+// WeiToDecimal to native chain token
+func WeiToDecimal(value *big.Int) *big.Float {
 	return new(big.Float).Quo(new(big.Float).SetInt(value), big.NewFloat(params.GWei))
 }
 
 // GweiToWei conversion
 func GweiToWei(gwei *big.Int) *big.Int {
 	return new(big.Int).Mul(gwei, big.NewInt(params.GWei))
+}
+
+// CalcGasCost calculate gas cost given gas limit (units) and gas price (wei)
+func CalcGasCost(gasLimit uint64, gasPrice *big.Int) *big.Int {
+	gasLimitBig := big.NewInt(int64(gasLimit))
+	return gasLimitBig.Mul(gasLimitBig, gasPrice)
 }

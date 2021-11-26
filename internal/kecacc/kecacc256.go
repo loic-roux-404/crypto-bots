@@ -56,8 +56,7 @@ func NewWallet(
 
 	kecacc.AddPrivs(importKeys)
 
-	err = kecacc.initAccount(pass, importKs)
-	if err != nil {
+	err = kecacc.initAccount(pass, importKs); if err != nil {
 		return nil, err
 	}
 
@@ -66,10 +65,9 @@ func NewWallet(
 	if err != nil {
 		return nil, err
 	}
-
+	print(fromAcc)
 	if len(fromAcc) > 0 {
-		err = kecacc.changeCurrAcc(fromAcc)
-		if err != nil {
+		err = kecacc.changeCurrAcc(fromAcc); if err != nil {
 			return nil, err
 		}
 	}
@@ -90,9 +88,7 @@ func (k *KeccacWallet) initAccount(pass string, wantedKsFile string) error {
 		k.currentAccount = acc
 	}
 
-	acc, err := k.addKs(wantedKsFile, pass)
-
-	if err != nil {
+	acc, err := k.addKs(wantedKsFile, pass); if err != nil {
 		return err
 	}
 
@@ -142,7 +138,7 @@ func (k *KeccacWallet) AddPrivs(importKeys []wallet.ImportedKey) {
 			log.Printf("Warn: error importing a public key, skipping...")
 			continue
 		}
-		k.keystore.ImportECDSA(finalPriv, imp.Pass)
+		k.keystore.ImportECDSA(finalPriv, k.pass)
 	}
 }
 
@@ -157,14 +153,13 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 	}
 
 	// Find the signing account
-	signAcc, err := k.keystore.Find(fromAccDef)
-	if err == nil {
+	signAcc, err := k.keystore.Find(fromAccDef); if err == nil {
 		k.currentAccount = signAcc
-	} else {
-		return fmt.Errorf("%s %s", errAccNotFound, address)
+
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("%s %s", errAccNotFound, address)
 }
 
 // IsTxFromCurrent account

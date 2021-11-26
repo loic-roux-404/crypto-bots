@@ -7,7 +7,7 @@ import (
 
 	"github.com/loic-roux-404/crypto-bots/internal/config"
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/fees"
 	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
 	"github.com/spf13/viper"
 )
@@ -22,15 +22,16 @@ type Config struct {
 	Pass        string               `mapstructure:"pass"`
 	Keystore    string               `mapstructure:"keystore"`
 	Ipc         string               `mapstructure:"ipc"`
-	Ws          string               `mapstructure:"Ws"`
+	Ws          string               `mapstructure:"ws"`
 	ChainID     int64                `mapstructure:"chainid"`
-	FromAccount string               `mapstructure:"fromAccount"`
+	FromAddress string               `mapstructure:"fromAddress"`
 	Wallets     []wallet.ImportedKey `mapstructure:"wallets"`
 }
 
-// NetChainType viper cnf id
 const (
+	// NetChainType viper cnf id
 	NetChainType = "chain"
+	// NetName cnf id
 	NetName      = "network"
 )
 
@@ -60,7 +61,7 @@ func NewNetConfig(defaults helpers.Map) (*Config, error) {
 		return nil, ErrIpcNotConfigured
 	}
 	// TODO switch case on fee system
-	cnf.GasPrice = token.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
+	cnf.GasPrice = fees.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
 
 	return cnf, nil
 }
