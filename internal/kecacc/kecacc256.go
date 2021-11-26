@@ -33,6 +33,7 @@ var (
 	errPassMissing = errors.New("Missing a password")
 	errAccCreation = errors.New("Error creating account")
 	errAccNotFound = errors.New("No account in keystore : ")
+	errPrivKey 	   = errors.New("Warn: error importing key starting with %s, [skipping]")
 )
 
 // NewWallet kecacc
@@ -54,7 +55,7 @@ func NewWallet(
 
 	kecacc = &KeccacWallet{keystore: ks, currentAccount: accounts.Account{}, pass: pass}
 
-	kecacc.AddPrivs(importKeys)
+	kecacc.AddPrivs(importKeys);
 
 	err = kecacc.initAccount(pass, importKs); if err != nil {
 		return nil, err
@@ -65,7 +66,7 @@ func NewWallet(
 	if err != nil {
 		return nil, err
 	}
-	print(fromAcc)
+
 	if len(fromAcc) > 0 {
 		err = kecacc.changeCurrAcc(fromAcc); if err != nil {
 			return nil, err
@@ -102,12 +103,16 @@ func (k *KeccacWallet) addKs(
 	pass string,
 ) (accounts.Account, error) {
 	jsonBytes, err := ioutil.ReadFile(file)
-
 	if err == nil {
 		acc, err := k.keystore.Import(jsonBytes, pass, pass)
 
-		if err != keystore.ErrAccountAlreadyExists {
+		if err == keystore.ErrAccountAlreadyExists {
 			log.Printf("Warning: %s", err.Error())
+		}
+
+		if err != nil && err != keystore.ErrAccountAlreadyExists  {
+			println(err.Error())
+			return accounts.Account{}, err
 		}
 
 		return acc, nil
@@ -117,6 +122,7 @@ func (k *KeccacWallet) addKs(
 	log.Printf("Creating keystore: %s", file)
 
 	acc, err := k.keystore.NewAccount(pass)
+ 
 	if err != nil {
 		log.Panic(errAccCreation.Error(), err)
 	}
@@ -135,10 +141,16 @@ func (k *KeccacWallet) AddPrivs(importKeys []wallet.ImportedKey) {
 	for _, imp := range importKeys {
 		finalPriv, err := crypto.HexToECDSA(imp.Priv)
 		if err != nil {
-			log.Printf("Warn: error importing a public key, skipping...")
+			log.Printf(errPrivKey.Error(), imp.Priv[:3])
 			continue
 		}
-		k.keystore.ImportECDSA(finalPriv, k.pass)
+
+		_, err = k.keystore.ImportECDSA(finalPriv, k.pass)
+
+		if err != nil {
+			log.Printf(errPrivKey.Error(),  imp.Priv[:3])
+			continue
+		}
 	}
 }
 
@@ -148,7 +160,7 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 		Address: common.HexToAddress(address),
 	}
 
-	if ValidateAccAddress(fromAccDef) {
+	if !ValidateAccAddress(fromAccDef) {
 		return fmt.Errorf("%s : %s", ErrAccInvalid, address)
 	}
 

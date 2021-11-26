@@ -65,7 +65,7 @@ func (s Solidity) Compile(mockLoc, mockSrc, mockDest string) error {
 }
 
 // PackageByNet a map of net and contract
-func (s Solidity) PackageByNet(m helpers.Map, pkgDir string) error {
+func (s Solidity) PackageByNet(m helpers.SimpleMap, pkgDir string) error {
 	var err error = nil
 	for _, sc := range m {
 		folders := strings.Split(sc.(string), "/")

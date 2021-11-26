@@ -7,7 +7,7 @@ import (
 	"github.com/loic-roux-404/crypto-bots/internal/ibrokers"
 )
 
-var bs = helpers.Map{
+var bs = helpers.SimpleMap{
 	"binance": ibrokers.NewBinance(),
 }
 

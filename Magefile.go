@@ -52,9 +52,7 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds)
-
-	if err != nil {
+	err := cmd.BinInstall(toolsCmds); if err != nil {
 		panic(err)
 	}
 }
@@ -67,18 +65,15 @@ type Build mg.Namespace
 func All() error {
 	b := new(Build)
 
-	err := b.ScPancake()
-	if err != nil {
+	err := b.ScPancake(); if err != nil {
 		return err
 	}
 
-	err = b.Cmds("")
-	if err != nil {
+	err = b.Cmds(""); if err != nil {
 		return err
 	}
 
-	err = b.Api()
-	if err != nil {
+	err = b.Api(); if err != nil {
 		return err
 	}
 
@@ -106,7 +101,7 @@ var (
 	mockLoc         = filepath.Join(".", "tests", "mocks")
 	mockDest        = filepath.Join(mockLoc, "data")
 	mockName        = "glitch"
-	scByNetSet      = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
+	scByNetSet      = helpers.SimpleMap{"bep20": filepath.Join(mockDest, "PancakePair")}
 	// unit tests options
 	unitTimeout = "30s"
 	// Create test runnner modules
@@ -144,13 +139,11 @@ type Test mg.Namespace
 
 // TODO set tests folders
 func (t Test) All() (err error) {
-	err = t.Lib("")
-	if err != nil {
+	err = t.Lib(""); if err != nil {
 		return err
 	}
 
-	err = t.Web()
-	if err != nil {
+	err = t.Web(); if err != nil {
 		return err
 	}
 

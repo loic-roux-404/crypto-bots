@@ -40,7 +40,7 @@ func NewContract(
 
 // JSON representation on contract
 func (c *Contract) JSON() []byte {
-	b, err := json.Marshal(helpers.Map{
+	b, err := json.Marshal(helpers.SimpleMap{
 		"address": c.address,
 		"tx":      c.tx,
 	})

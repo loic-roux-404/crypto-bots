@@ -22,8 +22,16 @@ func ToWei(eth *big.Float) *big.Int {
 }
 
 // WeiToDecimal to native chain token
-func WeiToDecimal(value *big.Int) *big.Float {
-	return new(big.Float).Quo(new(big.Float).SetInt(value), big.NewFloat(params.GWei))
+func WeiToDecimal(ivalue interface{}) *big.Float {
+	value := new(big.Int)
+	switch v := ivalue.(type) {
+	case string:
+		value.SetString(v, 10)
+	case *big.Int:
+		value = v
+	}
+
+	return new(big.Float).Quo(new(big.Float).SetInt(value), big.NewFloat(params.Ether))
 }
 
 // GweiToWei conversion
