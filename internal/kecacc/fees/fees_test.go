@@ -16,7 +16,7 @@ func TestToWei(t *testing.T) {
 	}
 }
 
-func TestToDecimal(t *testing.T) {
+func TestWeiToDecimal(t *testing.T) {
 	t.Parallel()
 	weiAmount := big.NewInt(0)
 	weiAmount.SetString("20000000000000000", 10)
