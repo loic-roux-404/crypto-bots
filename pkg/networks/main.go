@@ -9,13 +9,13 @@ import (
 	"github.com/loic-roux-404/crypto-bots/internal/nets/erc20"
 )
 
-var defaults = helpers.Map{
+var defaults = helpers.SimpleMap{
 	erc20.ErcNetName: "ropsten",
 	bep20.BepNetName: "testnet",
 }
 
 // Nets map
-var Nets = helpers.Map{
+var Nets = helpers.SimpleMap{
 	erc20.ErcNetName: erc20.NewEth,
 	bep20.BepNetName: bep20.NewBep,
 }

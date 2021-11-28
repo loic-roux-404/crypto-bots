@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/adshao/go-binance/v2 v2.3.2-0.20210826092038-5f4ae8b4377d
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
-	github.com/ethereum/go-ethereum v1.10.10
+	github.com/ethereum/go-ethereum v1.10.13
 	github.com/golang/protobuf v1.5.2
 	github.com/joho/godotenv v1.3.0
 	github.com/magefile/mage v1.11.1-0.20210928193738-dd944245e253

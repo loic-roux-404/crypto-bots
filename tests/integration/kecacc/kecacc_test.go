@@ -26,22 +26,22 @@ func TestKecacc(t *testing.T) {
 	)
 
 	if err != nil || acc == nil {
-		t.Logf("FAIL: error creating kecacc wallet, %p, %s", acc, err)
+		t.Fatalf("FAIL: error creating kecacc wallet, %p, %s", acc, err)
 		return
 	}
 
 	add := acc.Account().Address.Hex()
 	if add != tests.DummyAddress {
-		t.Logf("FAIL: Address switch failed, current: %s, expected: %s", add, tests.DummyAddress)
+		t.Fatalf("FAIL: Address switch failed, current: %s, expected: %s", add, tests.DummyAddress)
 	}
 
 	ok, err := helpers.Exists(tests.DummyKs)
 	if !ok || err != nil {
-		t.Log(KeystoreFileNotFound)
+		t.Fatal(KeystoreFileNotFound)
 	}
 
 	err = Clean(); if err != nil {
-		t.Log(KeystoreFileNotFound)
+		t.Fatal(KeystoreFileNotFound)
 	}
 }
 

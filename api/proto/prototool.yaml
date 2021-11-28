@@ -13,7 +13,7 @@ lint:
   group: uber2
   file_header:
     path: LICENSE
-  java_package_prefix: com.github.loicroux404.cryptobots
+  java_package_prefix: com.github.loic-roux-404.cryptobots
 
 generate:
   go_options:

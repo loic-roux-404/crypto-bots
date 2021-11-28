@@ -41,7 +41,7 @@ var (
 )
 
 // NewNetConfig create erc like blockchain handler
-func NewNetConfig(defaults helpers.Map) (*Config, error) {
+func NewNetConfig(defaults helpers.SimpleMap) (*Config, error) {
 	if len(viper.GetString(NetName)) <= 0 {
 		viper.Set(NetName, defaults[viper.GetString(NetChainType)])
 	}

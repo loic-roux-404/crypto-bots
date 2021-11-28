@@ -24,7 +24,7 @@ type Adapter struct {
 
 // Log transaction in json
 func (tx *Adapter) Log() {
-	m := helpers.Map{
+	m := helpers.SimpleMap{
 		"hash":     tx.Hash,
 		"nonce":    tx.Nonce.Uint64(),
 		"to":       tx.To,
