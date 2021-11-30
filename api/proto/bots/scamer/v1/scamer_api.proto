@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package bots.scamer.v1;
+
+option csharp_namespace = "Bots.Scamer.V1";
+option go_package = "scamerv1";
+option java_multiple_files = true;
+option java_outer_classname = "ScamerProto";
+option java_package = "com.github.loic-roux-404.crypto-bots.bots.scamer.v1";
+option objc_class_prefix = "BCX";
+option php_namespace = "Bots\\Scamer\\V1";
+
+import "bots/scamer/v1/scamer.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+service ScamerAPI {
+  rpc AddKeys(KeysRequest) returns (KeysResponse);
+}
+
+message KeysRequest {
+  Keys keys = 1;
+}
+
+message KeysResponse {
+  bool status = 1;
+  string message = 2;
+}
