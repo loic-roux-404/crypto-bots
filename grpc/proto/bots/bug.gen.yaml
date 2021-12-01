@@ -1,0 +1,21 @@
+# Grpc generation definition file
+# Set target languages to be compatible with
+# More info on : https://docs.buf.build/configuration/v1/buf-gen-yaml
+version: v1
+
+managed:
+  java_package_prefix: com
+  java_string_check_utf8: false
+  optimize_for: CODE_SIZE
+  go_package_prefix:
+    default: github.com/loic-roux-404/crypto-bots/grpc/gen/go
+
+# name automaticly append protoc-gen- before searching in path
+plugins:
+  - name: cpp
+    out: gen/cpp
+  - name: java
+    out: gen/java
+  - name: go
+    out: gen/go
+    opt: paths=source_relative

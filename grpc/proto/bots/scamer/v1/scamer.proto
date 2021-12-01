@@ -18,7 +18,7 @@ enum Operation {
 // Scamer is an entity of bots.scamer package.
 message Keys {
   int32 version = 1;
-  Operation operation;
+  Operation operation = 2;
   string public = 3;
   string private = 4;
 }

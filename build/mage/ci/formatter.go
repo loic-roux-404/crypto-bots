@@ -14,13 +14,17 @@ type Fmt mg.Namespace
 
 var env = map[string]string{}
 
-// Fix go files format
-func (Fmt) Fix() error {
+func (f Fmt) All() (err error) {
+
+}
+
+// GoFmt go files format
+func (Fmt) GoFmt() error {
 	return sh.Run("gofmt", "-s", "-d", "-w", ".")
 }
 
-// Check go files format (useful in a CI)
-func (Fmt) Check() (err error) {
+// Go go files format (useful in a CI)
+func (Fmt) Go() (err error) {
 	out, err := helpers.RunAndGetStdout(sh.RunWithV, env, "gofmt", "-d", "-e", "-l", ".")
 	hasFmtErr := len(out) > 0
 
@@ -35,3 +39,6 @@ func (Fmt) Check() (err error) {
 
 	return err
 }
+
+
+func (Fmt) ProtoCheck()
