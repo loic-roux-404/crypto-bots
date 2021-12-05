@@ -10,8 +10,8 @@ option java_package = "com.github.loic-roux-404.crypto-bots.bots.scamer.v1";
 option objc_class_prefix = "BCX";
 option php_namespace = "Bots\\Scamer\\V1";
 
-import "v1/scamer.proto";
-import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+import "scamer/v1/scamer.proto";
+import "envoyproxy/protoc-gen-validate/validate.proto";
 
 service ScamerAPI {
   rpc AddKeys(KeysRequest) returns (KeysResponse);

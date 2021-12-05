@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	wsProtocol = "ws"
+	wsProtocol  = "ws"
 	sepProtocol = "://"
 )
 
@@ -62,7 +62,7 @@ func protocolURLOk(pr, addr string) bool {
 	}
 
 	sslLen := 0
-	prPos := prLen-1
+	prPos := prLen - 1
 
 	// SSL case
 	if len(addr) >= prPos+1 && addr[prPos+1] == 's' {
@@ -76,7 +76,7 @@ func protocolURLOk(pr, addr string) bool {
 		return false
 	}
 
-	print("\naaaaaaaaaaa: ", addr[:prLen+sslLen] )
+	print("\naaaaaaaaaaa: ", addr[:prLen+sslLen])
 
 	return IsDomain(addr[sslLen+len(sepProtocol):])
 }

@@ -15,10 +15,10 @@ import (
 
 // ErrInvalidTx data
 var (
-	ErrInvalidTx = errors.New("Invalid transaction data")
-	ErrEmptyRaw  = errors.New("Empty raw transaction")
-	ErrNilKeccacTx  = errors.New("Empty erc transaction struct")
-	ErrFailedKeccacTx  = errors.New("Failed to create erc tx struct")
+	ErrInvalidTx      = errors.New("Invalid transaction data")
+	ErrEmptyRaw       = errors.New("Empty raw transaction")
+	ErrNilKeccacTx    = errors.New("Empty erc transaction struct")
+	ErrFailedKeccacTx = errors.New("Failed to create erc tx struct")
 )
 
 // NewTx prepare transaction requirements
@@ -61,7 +61,7 @@ func NewTx(
 		GasLimit:    gasLimit,
 		GasPrice:    gasPrice,
 		Data:        data,
-		Adapted: 	 ercTx,
+		Adapted:     ercTx,
 	}, nil
 }
 
@@ -99,7 +99,8 @@ func KeccacTxFromRaw(rawTx string) (*types.Transaction, error) {
 		return nil, err
 	}
 
-	err = rlp.DecodeBytes(rawTxBytes, &tx); if err != nil {
+	err = rlp.DecodeBytes(rawTxBytes, &tx)
+	if err != nil {
 		return nil, err
 	}
 

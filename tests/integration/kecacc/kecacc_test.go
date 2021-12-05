@@ -40,14 +40,16 @@ func TestKecacc(t *testing.T) {
 		t.Fatal(KeystoreFileNotFound)
 	}
 
-	err = Clean(); if err != nil {
+	err = Clean()
+	if err != nil {
 		t.Fatal(KeystoreFileNotFound)
 	}
 }
 
 func Clean() error {
-	e := os.Remove(tests.DummyKs); if e != nil {
-        return e
+	e := os.Remove(tests.DummyKs)
+	if e != nil {
+		return e
 	}
 
 	return nil

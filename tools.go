@@ -11,4 +11,6 @@ import (
 	_ "github.com/ethereum/go-ethereum/cmd/geth"
 	// mage build tool import
 	_ "github.com/magefile/mage"
+	// Proto imports
+	_ "github.com/bufbuild/buf/cmd/buf"
 )

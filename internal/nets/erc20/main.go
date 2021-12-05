@@ -126,7 +126,8 @@ func (e *ErcHandler) Cancel(nonce *big.Int) string {
 		panic(err)
 	}
 
-	sentTx, err := e.signAndBroadcast(tx); if err != nil {
+	sentTx, err := e.signAndBroadcast(tx)
+	if err != nil {
 		panic(err)
 	}
 

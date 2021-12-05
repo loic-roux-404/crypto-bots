@@ -33,7 +33,7 @@ var (
 	errPassMissing = errors.New("Missing a password")
 	errAccCreation = errors.New("Error creating account")
 	errAccNotFound = errors.New("No account in keystore : ")
-	errPrivKey 	   = errors.New("Warn: error importing key starting with %s, [skipping]")
+	errPrivKey     = errors.New("Warn: error importing key starting with %s, [skipping]")
 )
 
 // NewWallet kecacc
@@ -55,9 +55,10 @@ func NewWallet(
 
 	kecacc = &KeccacWallet{keystore: ks, currentAccount: accounts.Account{}, pass: pass}
 
-	kecacc.AddPrivs(importKeys);
+	kecacc.AddPrivs(importKeys)
 
-	err = kecacc.initAccount(pass, importKs); if err != nil {
+	err = kecacc.initAccount(pass, importKs)
+	if err != nil {
 		return nil, err
 	}
 
@@ -68,7 +69,8 @@ func NewWallet(
 	}
 
 	if len(fromAcc) > 0 {
-		err = kecacc.changeCurrAcc(fromAcc); if err != nil {
+		err = kecacc.changeCurrAcc(fromAcc)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -89,7 +91,8 @@ func (k *KeccacWallet) initAccount(pass string, wantedKsFile string) error {
 		k.currentAccount = acc
 	}
 
-	acc, err := k.addKs(wantedKsFile, pass); if err != nil {
+	acc, err := k.addKs(wantedKsFile, pass)
+	if err != nil {
 		return err
 	}
 
@@ -110,7 +113,7 @@ func (k *KeccacWallet) addKs(
 			log.Printf("Warning: %s", err.Error())
 		}
 
-		if err != nil && err != keystore.ErrAccountAlreadyExists  {
+		if err != nil && err != keystore.ErrAccountAlreadyExists {
 			println(err.Error())
 			return accounts.Account{}, err
 		}
@@ -122,7 +125,7 @@ func (k *KeccacWallet) addKs(
 	log.Printf("Creating keystore: %s", file)
 
 	acc, err := k.keystore.NewAccount(pass)
- 
+
 	if err != nil {
 		log.Panic(errAccCreation.Error(), err)
 	}
@@ -148,7 +151,7 @@ func (k *KeccacWallet) AddPrivs(importKeys []wallet.ImportedKey) {
 		_, err = k.keystore.ImportECDSA(finalPriv, k.pass)
 
 		if err != nil {
-			log.Printf(errPrivKey.Error(),  imp.Priv[:3])
+			log.Printf(errPrivKey.Error(), imp.Priv[:3])
 			continue
 		}
 	}
@@ -165,7 +168,8 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 	}
 
 	// Find the signing account
-	signAcc, err := k.keystore.Find(fromAccDef); if err == nil {
+	signAcc, err := k.keystore.Find(fromAccDef)
+	if err == nil {
 		k.currentAccount = signAcc
 
 		return nil

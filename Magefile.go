@@ -38,9 +38,10 @@ var toolsCmds = []string{
 	"github.com/ethereum/go-ethereum/cmd/evm",
 	"github.com/ethereum/go-ethereum/cmd/geth",
 	"github.com/ethereum/go-ethereum/cmd/abigen",
-	"github.com/bufbuild/buf/cmd/buf",
-  	"github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking",
-  	"github.com/bufbuild/buf/cmd/protoc-gen-buf-lint",
+	"github.com/bufbuild/buf@main/cmd/buf@main",
+	"github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking@main",
+	"github.com/bufbuild/buf/cmd/protoc-gen-buf-lint@main",
+	"github.com/envoyproxy/protoc-gen-validate",
 }
 
 func init() {

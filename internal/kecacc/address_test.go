@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-
 func TestIsValidAddress(t *testing.T) {
 	t.Parallel()
 	validAddress := "0x323b5d4c32345ced77393b3530b1eed0f346429d"

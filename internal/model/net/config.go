@@ -32,7 +32,7 @@ const (
 	// NetChainType viper cnf id
 	NetChainType = "chain"
 	// NetName cnf id
-	NetName      = "network"
+	NetName = "network"
 )
 
 var (
