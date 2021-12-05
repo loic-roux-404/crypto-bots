@@ -38,6 +38,9 @@ var toolsCmds = []string{
 	"github.com/ethereum/go-ethereum/cmd/evm",
 	"github.com/ethereum/go-ethereum/cmd/geth",
 	"github.com/ethereum/go-ethereum/cmd/abigen",
+	"github.com/bufbuild/buf/cmd/buf",
+  	"github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking",
+  	"github.com/bufbuild/buf/cmd/protoc-gen-buf-lint",
 }
 
 func init() {
@@ -52,7 +55,8 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds); if err != nil {
+	err := cmd.BinInstall(toolsCmds)
+	if err != nil {
 		panic(err)
 	}
 }
@@ -65,15 +69,18 @@ type Build mg.Namespace
 func All() error {
 	b := new(Build)
 
-	err := b.ScPancake(); if err != nil {
+	err := b.ScPancake()
+	if err != nil {
 		return err
 	}
 
-	err = b.Cmds(""); if err != nil {
+	err = b.Cmds("")
+	if err != nil {
 		return err
 	}
 
-	err = b.Api(); if err != nil {
+	err = b.Api()
+	if err != nil {
 		return err
 	}
 
@@ -139,11 +146,13 @@ type Test mg.Namespace
 
 // TODO set tests folders
 func (t Test) All() (err error) {
-	err = t.Lib(""); if err != nil {
+	err = t.Lib("")
+	if err != nil {
 		return err
 	}
 
-	err = t.Web(); if err != nil {
+	err = t.Web()
+	if err != nil {
 		return err
 	}
 

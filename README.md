@@ -110,6 +110,7 @@ Nets :
 *Go* :
     - `curl -sSL https://git.io/g-install | sh -s`
     - `g install 1.17.2`
+    - `go install github.com/magefile/mage`
 
 *Geth* :
     - `C compiler` : Ensure you have clang (Apple) Mingw2 clang (win) or gcc (Linux) 

@@ -15,7 +15,7 @@ type Fmt mg.Namespace
 var env = map[string]string{}
 
 func (f Fmt) All() (err error) {
-
+	return nil
 }
 
 // GoFmt go files format
@@ -41,4 +41,6 @@ func (Fmt) Go() (err error) {
 }
 
 
-func (Fmt) ProtoCheck()
+func (Fmt) ProtoCheck() {
+
+}
