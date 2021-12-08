@@ -6,23 +6,24 @@ version: v1
 
 managed:
   enabled: true
-  java_package_prefix: com
+  java_package_prefix: com.loic-roux-404.crypto-bots.api.gen.java
   java_string_check_utf8: false
   optimize_for: CODE_SIZE
   go_package_prefix:
-    default: github.com/loic-roux-404/crypto-bots/grpc/gen/proto/go
+    default: github.com/loic-roux-404/crypto-bots/api/gen/go
 
 # name automaticly append protoc-gen- before searching in path
 plugins:
-  - name: cpp
-    out: grpc/gen/proto/cpp
-  - name: java
-    out: grpc/gen/proto/java
+  # - name: cpp
+  #   out: gen/cpp
+  # - name: java
+  #   out: gen/java
   - name: go
-    out: grpc/gen/proto/go
+    out: gen/go
     opt: paths=source_relative
   - name: go-grpc
-    out: gen/proto/go
+    out: gen/go
     opt:
       - paths=source_relative
       - require_unimplemented_servers=false
+

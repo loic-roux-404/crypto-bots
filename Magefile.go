@@ -11,6 +11,7 @@ import (
 	"github.com/magefile/mage/mg"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
+	"github.com/loic-roux-404/crypto-bots/build/mage/protos"
 
 	// mage:import
 	ci "github.com/loic-roux-404/crypto-bots/build/mage/ci"
@@ -35,13 +36,17 @@ var (
 )
 
 var toolsCmds = []string{
+	// Etherum commands
 	"github.com/ethereum/go-ethereum/cmd/evm",
 	"github.com/ethereum/go-ethereum/cmd/geth",
 	"github.com/ethereum/go-ethereum/cmd/abigen",
-	"github.com/bufbuild/buf@main/cmd/buf@main",
+	// Buf deps for api
+	"github.com/bufbuild/buf/cmd/buf@main",
 	"github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking@main",
 	"github.com/bufbuild/buf/cmd/protoc-gen-buf-lint@main",
 	"github.com/envoyproxy/protoc-gen-validate",
+	"google.golang.org/protobuf/cmd/protoc-gen-go@latest",
+	"google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest",
 }
 
 func init() {
@@ -90,7 +95,7 @@ func All() error {
 
 // Api build protobuf files
 func (Build) Api() error {
-	return nil
+	return protos.BufAll("")
 }
 
 // Web interface build

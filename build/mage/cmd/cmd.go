@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"log"
 	"strings"
 
 	"github.com/magefile/mage/sh"
@@ -38,8 +37,6 @@ func BinInstall(tools []string) error {
 			// Verbose mode ?
 			continue
 		}
-
-		log.Printf("Info: Installing %s\n", pkg)
 
 		err := sh.Run("go", "install", pkg)
 

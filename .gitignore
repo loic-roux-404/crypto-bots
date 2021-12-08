@@ -7,3 +7,4 @@ UTC--*
 !/bin/.gitkeep
 /gencontracts/*
 !/gencontracts/.gitkeep
+api/gen

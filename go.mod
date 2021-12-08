@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/adshao/go-binance/v2 v2.3.2-0.20210826092038-5f4ae8b4377d
+	github.com/bufbuild/buf v1.0.0-rc8
 	github.com/envoyproxy/protoc-gen-validate v0.6.2
 	github.com/ethereum/go-ethereum v1.10.13
 	github.com/golang/protobuf v1.5.2
@@ -14,7 +15,6 @@ require (
 	github.com/thoas/go-funk v0.9.1
 	google.golang.org/grpc v1.43.0-dev.0.20211108191124-79e9c9571a19
 	gopkg.in/tucnak/telebot.v2 v2.4.0
-	github.com/bufbuild/buf v1.0.0-rc8
 )
 
 require (
@@ -81,6 +81,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
+	go.buf.build/library/go/envoyproxy/protoc-gen-validate v1.2.3 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211108170745-6635138e15ea // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect

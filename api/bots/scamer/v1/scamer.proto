@@ -11,8 +11,8 @@ option objc_class_prefix = "BCX";
 option php_namespace = "Bots\\Scamer\\V1";
 
 enum Operation {
-  START = 0;
-  STOP = 1;
+  OPERATION_RUN = 0;
+  OPERATION_STOP = 1;
 }
 
 // Scamer is an entity of bots.scamer package.
