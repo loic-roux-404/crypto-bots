@@ -9,21 +9,21 @@ import (
 
 func BufAll(name string) (err error) {
 	os.Chdir("api")
-	// Empty for all
-	var arg []string = []string{}
+	// Empty for all proto files
+	var args []string = []string{}
 
 	if name == "" {
 		log.Print("Info: Building all")
 	} else {
-		arg = []string{name}
+		args = []string{name}
 		log.Printf("Info: Building %s", name)
 	}
 
-	err = bufCmd("build", arg); if err != nil {
+	err = bufCmd("build", args); if err != nil {
 		return err
 	}
 
-	err = bufCmd("generate", arg); if err != nil {
+	err = bufCmd("generate", args); if err != nil {
 		return err
 	}
 

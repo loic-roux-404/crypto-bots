@@ -12,6 +12,7 @@ option php_namespace = "Bots\\Scamer\\V1";
 
 import "scamer/v1/scamer.proto";
 // import "validate/protoc-gen-validate/validate.proto";
+// TODO use google.api.http to transcode requests from front end
 
 service ScamerService {
   rpc AddKeys(AddKeysRequest) returns (KeysResponse);

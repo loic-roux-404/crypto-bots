@@ -20,8 +20,13 @@ func ToFlagsStr(flagList []string) string {
 
 func pkgToCmd(pkg string) string {
 	parts := strings.Split(pkg, "/")
+	pkgPart := parts[len(parts)-1]
 
-	return parts[len(parts)-1]
+	if strings.Contains(pkgPart, "@") {
+		pkgPart = strings.Split(pkgPart, "@")[0]
+	}
+
+	return pkgPart
 }
 
 // PkgCommandExist in PATH

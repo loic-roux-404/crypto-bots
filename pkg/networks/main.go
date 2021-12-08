@@ -12,6 +12,7 @@ import (
 var defaults = helpers.SimpleMap{
 	erc20.ErcNetName: "ropsten",
 	bep20.BepNetName: "testnet",
+	// arc20.ArcNetName: "testnet",
 }
 
 // Nets map

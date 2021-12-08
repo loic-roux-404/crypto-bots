@@ -11,6 +11,7 @@ import (
 	"github.com/magefile/mage/mg"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
+	"github.com/loic-roux-404/crypto-bots/build/mage/goutils"
 	"github.com/loic-roux-404/crypto-bots/build/mage/protos"
 
 	// mage:import
@@ -35,20 +36,6 @@ var (
 	solcVersion = "0.5.16"
 )
 
-var toolsCmds = []string{
-	// Etherum commands
-	"github.com/ethereum/go-ethereum/cmd/evm",
-	"github.com/ethereum/go-ethereum/cmd/geth",
-	"github.com/ethereum/go-ethereum/cmd/abigen",
-	// Buf deps for api
-	"github.com/bufbuild/buf/cmd/buf@main",
-	"github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking@main",
-	"github.com/bufbuild/buf/cmd/protoc-gen-buf-lint@main",
-	"github.com/envoyproxy/protoc-gen-validate",
-	"google.golang.org/protobuf/cmd/protoc-gen-go@latest",
-	"google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest",
-}
-
 func init() {
 	if exe := os.Getenv("GOEXE"); exe != "" {
 		goexe = exe
@@ -61,7 +48,13 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds)
+	imports, err := goutils.ImportsToSlice(".", "tools.go", "tools")
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = cmd.BinInstall(imports)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +83,7 @@ func All() error {
 		return err
 	}
 
-	return b.Web()
+	return b.App()
 }
 
 // Api build protobuf files
@@ -98,8 +91,8 @@ func (Build) Api() error {
 	return protos.BufAll("")
 }
 
-// Web interface build
-func (Build) Web() error {
+// App interface build
+func (Build) App() error {
 	return nil
 }
 
@@ -157,7 +150,7 @@ func (t Test) All() (err error) {
 		return err
 	}
 
-	err = t.Web()
+	err = t.App()
 	if err != nil {
 		return err
 	}
@@ -170,10 +163,10 @@ func (Test) Api() error {
 	return nil
 }
 
-// Web Test
+// App Test
 // Forward to all node js tests
 // cypress / jest / BDD
-func (Test) Web() error {
+func (Test) App() error {
 	return nil
 }
 
@@ -189,8 +182,8 @@ func (Deploy) ScPancake() error {
 	return nil
 }
 
-// Web ui deploy
-func (Deploy) Web() error {
+// App ui deploy
+func (Deploy) App() error {
 	return nil
 }
 
