@@ -134,6 +134,50 @@ func (e *ErcHandler) Cancel(nonce *big.Int) string {
 	return sentTx.String()
 }
 
+// CurrentBalance of account logged in
+func (e *ErcHandler) CurrentBalance() *big.Float {
+	defer helpers.RecoverAndLog()
+
+	b, err := e.balanceAt(e.kecacc.Account().Address.String())
+
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+// BalanceAt Logged in Account balance
+func (e *ErcHandler) BalanceAt(address string) *big.Float {
+	defer helpers.RecoverAndLog()
+	b, err := e.balanceAt(address)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+// balanceAt generic eth client call to fetch balance
+func (e *ErcHandler) balanceAt(address string) (*big.Float, error) {
+	if kecacc.ValidateAddress(address) {
+		return nil, kecacc.ErrAddressInvalid
+	}
+
+	b, err := e.clients.EthRPC().BalanceAt(
+		context.Background(),
+		common.HexToAddress(address),
+		nil,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("error: impossible to retrieve current account balance : %s", err)
+	}
+
+	return fees.WeiToDecimal(b), err
+}
+
 // Deploy a smart contract api function
 func (e *ErcHandler) Deploy(input string, storeDeployFn store.DeployFn) interface{} {
 	defer helpers.RecoverAndLog()

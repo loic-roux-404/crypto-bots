@@ -12,20 +12,18 @@ import (
 func Get(c interface{}, files map[string]string) {
 	for folder, name := range files {
 		log.Printf("Info: Loading config %s/%s", folder, name)
-		err := InitFiles(folder, name)
+		err := AddCnfFile(folder, name)
 
 		if err != nil {
 			log.Printf("Warn: config issue %s", err)
 		}
 	}
 
-	InitEnv()
-
 	viper.Unmarshal(&c)
 }
 
-// InitFiles config from yaml
-func InitFiles(folder string, name string) error {
+// AddCnfFile config from yaml
+func AddCnfFile(folder string, name string) error {
 	viper.SetConfigName(name)
 	viper.SetConfigType("yaml")
 	wd, _ := os.Getwd()
@@ -37,20 +35,4 @@ func InitFiles(folder string, name string) error {
 	}
 
 	return nil
-}
-
-// InitEnv parse secured env vars
-func InitEnv() {
-	wd, _ := os.Getwd()
-	viper.SetEnvPrefix("cbots")
-	viper.AddConfigPath(wd)
-	viper.SetConfigName("")
-	viper.SetConfigType("env")
-	viper.AutomaticEnv()
-
-	err := viper.ReadInConfig()
-
-	if err != nil {
-		log.Printf("Warning: %s", err)
-	}
 }

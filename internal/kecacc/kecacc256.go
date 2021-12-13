@@ -164,7 +164,7 @@ func (k *KeccacWallet) changeCurrAcc(address string) error {
 	}
 
 	if !ValidateAccAddress(fromAccDef) {
-		return fmt.Errorf("%s : %s", ErrAccInvalid, address)
+		return fmt.Errorf("%s : %s", ErrAddressInvalid, address)
 	}
 
 	// Find the signing account

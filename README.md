@@ -46,6 +46,7 @@ DEX :
     - [ ] Block observation
 
 - Commons
+    - [ ] Root cmd bootstrap chain config (refacto)
     - [ ] Secrets using decentralized secrets store [nucypher](https://www.nucypher.com/)
     - [ ] git ignore ropsten wallet
     - [ ] Control verbose

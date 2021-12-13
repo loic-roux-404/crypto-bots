@@ -25,4 +25,8 @@ type Network interface {
 	Subscribe(address string) sub.Sc
 	// Account subscribe
 	SubscribeCurrent() sub.Acc
+	// CurrentBalance of logged in account address
+	CurrentBalance() *big.Float
+	// BalanceAt address specified
+	BalanceAt(address string) *big.Float
 }

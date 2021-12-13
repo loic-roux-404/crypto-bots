@@ -15,10 +15,10 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// ErrAccInvalid invalid
+// ErrAddressInvalid invalid
 var (
-	ErrAccInvalid = errors.New("Invalid public key address")
-	ErrScInvalid  = errors.New("Invalid smart contract address")
+	ErrAddressInvalid = errors.New("invalid public address")
+	ErrScInvalid  = errors.New("invalid smart contract address")
 )
 
 // ValidateAddress destination
@@ -76,7 +76,7 @@ func IsErrAddress(address common.Address) error {
 		return nil
 	}
 
-	return fmt.Errorf("%s : %s", ErrAccInvalid, address)
+	return fmt.Errorf("%s : %s", ErrAddressInvalid, address)
 }
 
 // IsErrStrAddress is this string address ok
