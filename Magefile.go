@@ -28,7 +28,7 @@ const (
 
 var (
 	ports       = []string{"4205"}
-	cmds        = []string{"sniper", "scamer"}
+	cmds        = []string{"cryptos-bots"}
 	goexe       = "go"
 	currentDir  = helpers.GetCurrDir()
 	binDir, _   = filepath.Abs(filepath.Join(".", "bin"))
@@ -98,7 +98,7 @@ func (Build) App() error {
 
 // Commands
 var (
-	cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+	cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd", binDir)
 )
 
 // Contracts

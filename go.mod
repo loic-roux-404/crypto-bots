@@ -12,7 +12,6 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/thoas/go-funk v0.9.1
-	golang.org/x/example v0.0.0-20210811190340-787a929d5a0d
 	google.golang.org/grpc v1.43.0-dev.0.20211108191124-79e9c9571a19
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1

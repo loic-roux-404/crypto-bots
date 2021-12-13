@@ -1,8 +1,6 @@
 package core
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -16,8 +14,6 @@ const (
 	NetChainDefault = "erc20"
 	// CnfFileID config location
 	CnfFileID = "config"
-	// CnfFileIDDefault file
-	CnfFileIDDefault = "config.yaml"
 	// Flags
 	keystoreID = "keystore"
 	manualID   = "manualFee"
@@ -29,20 +25,9 @@ var genCmd *cobra.Command
 
 // InitChainCmd use in init() function in your cli impl
 // Dedicated to on chain system custom strategy
-func InitChainCmd(infos *cobra.Command) {
-	var (
-		// CfgFile location
-		CfgFile string
-		// genCmd command to configure network and wallet
-	)
-	genCmd = infos
-	// User Configuration
-	genCmd.PersistentFlags().StringVar(
-		&CfgFile,
-		CnfFileID,
-		CnfFileIDDefault,
-		fmt.Sprintf("user config file (default is %s)", CnfFileIDDefault),
-	)
+func InitChainCmd(cmd *cobra.Command) *cobra.Command {
+	genCmd = cmd
+
 	// Network type choice
 	genCmd.PersistentFlags().StringP(
 		net.NetChainType,
@@ -80,9 +65,6 @@ func InitChainCmd(infos *cobra.Command) {
 	)
 	genCmd.MarkPersistentFlagRequired(pass)
 	viper.BindPFlag(pass, genCmd.PersistentFlags().Lookup(pass))
-}
 
-// ExecuteNetCmd command for networks
-func ExecuteNetCmd() error {
-	return genCmd.Execute()
+	return genCmd
 }
