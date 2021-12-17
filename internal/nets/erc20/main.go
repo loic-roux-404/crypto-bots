@@ -13,56 +13,53 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/account"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/fees"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/store"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/watcher"
 	"github.com/loic-roux-404/crypto-bots/internal/model/net"
-	"github.com/loic-roux-404/crypto-bots/internal/model/store"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
-	"github.com/loic-roux-404/crypto-bots/internal/model/transaction"
-	"github.com/loic-roux-404/crypto-bots/internal/watcher"
+	"github.com/loic-roux-404/crypto-bots/internal/model/sub"
+	"github.com/loic-roux-404/crypto-bots/internal/nets/erc20/clients"
 )
 
 const (
 	// ErcNetName identifier
-	ErcNetName  = "erc20"
-	defaultNode = "ropsten"
+	ErcNetName = "erc20"
+	DefaultNet = "ropsten"
 )
 
 // errors
 var (
-	errorImpossibleNonce = errors.New("Unable to determine nonce ")
+	ErrImpossibleNonce = errors.New("Unable to determine nonce ")
 )
 
 // ErcHandler Handler config
 type ErcHandler struct {
-	name      string
-	clients   *NodeClients
-	kecacc    *account.KeccacWallet
-	config    *net.ERCConfig
+	Name      string
+	clients   *clients.NodeErcClients
+	kecacc    *kecacc.KeccacWallet
+	config    *net.Config
 	contracts map[string]*store.Contract
 }
 
 // NewEth create etherum handler
-func NewEth() net.Network {
-	cnf, err := net.NewERCConfig(ErcNetName, defaultNode)
-	if err != nil {
-		log.Fatal(err)
-	}
+func NewEth(cnf *net.Config) net.Network {
 
 	log.Printf("Info: Connecting to %s...", cnf.Ipc)
-	clients, err := NewClients(cnf.Ipc, cnf.Ws)
+	clients, err := clients.NewClients(cnf.Ipc, cnf.Ws)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	acc, err := account.NewErcWallet(cnf.Pass, cnf.Keystore, cnf.FromAccount)
+	acc, err := kecacc.NewWallet(cnf.Pass, cnf.Keystore, cnf.FromAddress, cnf.Wallets)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return &ErcHandler{
-		name:      ErcNetName,
+		Name:      ErcNetName,
 		kecacc:    acc,
 		clients:   clients,
 		config:    cnf,
@@ -72,10 +69,7 @@ func NewEth() net.Network {
 
 // Send transaction to address
 // Central function which need defer after the call
-func (e *ErcHandler) Send(
-	address string,
-	amount *big.Float,
-) (hash common.Hash) {
+func (e *ErcHandler) Send(address string, amount *big.Float) string {
 	defer helpers.RecoverAndLog()
 	nonce, err := e.getNonce()
 
@@ -96,7 +90,7 @@ func (e *ErcHandler) Send(
 		panic(err)
 	}
 
-	return sentTx
+	return sentTx.String()
 }
 
 // Update transaction
@@ -105,7 +99,7 @@ func (e *ErcHandler) Update(
 	nonce *big.Int,
 	address string,
 	amount *big.Float,
-) (hash common.Hash) {
+) string {
 	defer helpers.RecoverAndLog()
 	// Create new transaction
 	tx, err := e.createTx(address, nonce, amount, nil)
@@ -120,11 +114,11 @@ func (e *ErcHandler) Update(
 		panic(err)
 	}
 
-	return sentTx
+	return sentTx.String()
 }
 
 // Cancel cancel transaction
-func (e *ErcHandler) Cancel(nonce *big.Int) common.Hash {
+func (e *ErcHandler) Cancel(nonce *big.Int) string {
 	defer helpers.RecoverAndLog()
 	tx, err := e.createTx(e.kecacc.Account().Address.String(), nonce, big.NewFloat(0.0), nil)
 
@@ -133,12 +127,55 @@ func (e *ErcHandler) Cancel(nonce *big.Int) common.Hash {
 	}
 
 	sentTx, err := e.signAndBroadcast(tx)
+	if err != nil {
+		panic(err)
+	}
+
+	return sentTx.String()
+}
+
+// CurrentBalance of account logged in
+func (e *ErcHandler) CurrentBalance() *big.Float {
+	defer helpers.RecoverAndLog()
+
+	b, err := e.balanceAt(e.kecacc.Account().Address.String())
 
 	if err != nil {
 		panic(err)
 	}
 
-	return sentTx
+	return b
+}
+
+// BalanceAt Logged in Account balance
+func (e *ErcHandler) BalanceAt(address string) *big.Float {
+	defer helpers.RecoverAndLog()
+	b, err := e.balanceAt(address)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+// balanceAt generic eth client call to fetch balance
+func (e *ErcHandler) balanceAt(address string) (*big.Float, error) {
+	if kecacc.ValidateAddress(address) {
+		return nil, kecacc.ErrAddressInvalid
+	}
+
+	b, err := e.clients.EthRPC().BalanceAt(
+		context.Background(),
+		common.HexToAddress(address),
+		nil,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("error: impossible to retrieve current account balance : %s", err)
+	}
+
+	return fees.WeiToDecimal(b), err
 }
 
 // Deploy a smart contract api function
@@ -167,7 +204,7 @@ func (e *ErcHandler) Deploy(input string, storeDeployFn store.DeployFn) interfac
 func (e *ErcHandler) Load(address string, loadFn store.LoadFn) interface{} {
 	defer helpers.RecoverAndLog()
 	finalAddress := common.HexToAddress(address)
-	isScAddress, err := account.ValidateSc(e.clients.EthRPC(), common.HexToAddress(address))
+	isScAddress, err := kecacc.ValidateSc(e.clients.EthRPC(), common.HexToAddress(address))
 
 	if value, ok := e.contracts[address]; ok {
 		return value
@@ -189,64 +226,36 @@ func (e *ErcHandler) Load(address string, loadFn store.LoadFn) interface{} {
 
 // Subscribe an address
 // TODO move all in watcher module
-func (e *ErcHandler) Subscribe(address string) watcher.WatcherSc {
+func (e *ErcHandler) Subscribe(address string) sub.Sc {
 	log.Printf("Info: Booting subscriber on: %s", address)
 
 	finalAddress := common.HexToAddress(address)
 
-	isSc, err := account.ValidateSc(e.clients.EthRPC(), finalAddress)
+	_, err := kecacc.ValidateSc(e.clients.EthRPC(), finalAddress)
 	if err != nil {
 		panic(err)
 	}
 
-	if !isSc {
-		panic(account.ErrScInvalid)
-	}
-
-	w, err := e.subscribeSc(finalAddress)
+	w, err := watcher.NewSc(e.clients.EthWs(), ethereum.FilterQuery{
+		Addresses: []common.Address{common.HexToAddress(address)},
+	})
 
 	if err != nil {
 		panic(err)
 	}
 
 	return w
-
 }
 
 // SubscribeCurrent account
-func (e *ErcHandler) SubscribeCurrent() watcher.WatcherAcc {
-
-	w, err := e.subscribeAcc(e.kecacc.Account().Address)
+func (e *ErcHandler) SubscribeCurrent() sub.Acc {
+	w, err := watcher.NewAcc(e.clients, e.kecacc)
 
 	if err != nil {
 		panic(err)
 	}
 
 	return w
-}
-
-func (e *ErcHandler) subscribeSc(address common.Address) (w *watcher.Sc, err error) {
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{address},
-	}
-
-	w, err = watcher.NewSc(e.clients.EthWs(), query)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return w, nil
-}
-
-func (e *ErcHandler) subscribeAcc(address common.Address) (w *watcher.Acc, err error) {
-	w, err = watcher.NewAcc(e.clients.GethWs(), e.kecacc)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return w, nil
 }
 
 func (e *ErcHandler) signAndBroadcast(tx *types.Transaction) (common.Hash, error) {
@@ -326,7 +335,7 @@ func (e *ErcHandler) getNonce() (*big.Int, error) {
 	finalNonce := new(big.Int).SetUint64(nonce)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error: %s %s", errorImpossibleNonce, err)
+		return nil, fmt.Errorf("Error: %s %s", ErrImpossibleNonce, err)
 	}
 
 	return finalNonce, nil
@@ -340,7 +349,7 @@ func (e *ErcHandler) createTx(
 	amount *big.Float,
 	data []byte,
 ) (*types.Transaction, error) {
-	err := account.IsErrStrAddress(address)
+	err := kecacc.IsErrStrAddress(address)
 
 	if err != nil {
 		return nil, err
@@ -353,7 +362,7 @@ func (e *ErcHandler) createTx(
 		return nil, err
 	}
 
-	tx, err := transaction.NewTx(
+	tx, err := kecacc.NewTx(
 		finalAddress,
 		nonce,
 		amount,
@@ -366,20 +375,11 @@ func (e *ErcHandler) createTx(
 		return nil, err
 	}
 
-	// Create new transaction
-	ercTx := types.NewTransaction(
-		tx.Nonce.Uint64(),
-		tx.To,
-		tx.Amount,
-		tx.GasLimit.Uint64(),
-		tx.GasPrice,
-		tx.Data,
-	)
+	log.Println(kecacc.ToRlp(tx.Adapted.(*types.Transaction)))
 
-	tx.Hash = ercTx.Hash()
 	tx.Log()
 
-	return ercTx, nil
+	return tx.Adapted.(*types.Transaction), nil
 }
 
 func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
@@ -400,7 +400,7 @@ func (e *ErcHandler) getAuth() (*bind.TransactOpts, error) {
 		return nil, err
 	}
 
-	auth.Value = token.ToWei(big.NewFloat(0.00))
+	auth.Value = fees.ToWei(big.NewFloat(0.00))
 	auth.GasLimit = e.config.GasLimit
 	auth.GasPrice = big.NewInt(e.config.GasPrice)
 

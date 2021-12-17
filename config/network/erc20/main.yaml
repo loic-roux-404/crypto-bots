@@ -1,5 +1,0 @@
-ipc: "" # TODO
-chainid: 1
-gasLimit: 21000
-gasPrice: 8
-derivationPath: "m/44'/60'/0'/0"

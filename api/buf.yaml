@@ -1,0 +1,12 @@
+version: v1
+name: buf.build/api/bots
+lint:
+  use:
+    - DEFAULT
+breaking:
+  use:
+    - FILE
+
+deps:
+  - buf.build/envoyproxy/protoc-gen-validate:main
+  # - buf.build/googleapis/googleapis

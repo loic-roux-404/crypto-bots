@@ -1,0 +1,46 @@
+name: test
+
+on: [pull_request]
+
+jobs:
+  ci:
+    env:
+      GO111MODULE: "on"
+      CGO_ENABLED: "1"
+      GOPATH: /opt/go
+    name: Build and test on ${{ matrix.os }} with go ${{ matrix.go }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        go: [1.17.2]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^${{ matrix.go }}'
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/go-build
+          /opt/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Install go modules
+      run: go mod download
+
+    - name: Install mage cmd
+      run: go install github.com/magefile/mage
+
+    - name: Build
+      run: mage
+
+    - name: Format
+      run: mage fmt:check
+
+    - name: Test
+      run: mage test:all

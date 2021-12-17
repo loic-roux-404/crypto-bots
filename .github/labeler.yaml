@@ -1,0 +1,47 @@
+---
+# configuration spec at https://github.com/actions/labeler/blob/master/README.md
+area/docs:
+  - doc/*
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - LICENSE
+  - README.md
+area/tests:
+  - tests/*
+  - *_test.go
+  - .spec.*
+  - **/test/*
+  - **/tests/*
+area/automation:
+  - .github/*
+  - .github/**/*
+  - .manala.yaml
+  - .semrelrc
+area/chore:
+  - go.mod
+  - go.sum
+  - Magefile.go
+  - build/*
+area/api:
+  - api/*
+area/web:
+  - web/*
+area/cmd:
+  - cmd/*
+area/lib:
+  - config/*
+  - internal/*
+  - pkg/*
+  - tools/*
+area/networks:
+  - internal/nets
+  - cmd/bot/template/net.go
+area/brokers:
+  - internal/brokers
+  # - cmd/bot/template/broker.go
+area/telegram:
+  - internal/telegram
+area/ide:
+  - .git*
+  - .editorconfig
+  - .vscode

@@ -11,9 +11,11 @@ import (
 	"github.com/magefile/mage/mg"
 
 	"github.com/loic-roux-404/crypto-bots/build/mage/cmd"
+	"github.com/loic-roux-404/crypto-bots/build/mage/goutils"
+	"github.com/loic-roux-404/crypto-bots/build/mage/protos"
 
 	// mage:import
-	ci "github.com/loic-roux-404/crypto-bots/build/mage/ci"
+	"github.com/loic-roux-404/crypto-bots/build/mage/ci"
 	// mage:import
 	"github.com/loic-roux-404/crypto-bots/build/mage/solidity"
 
@@ -25,19 +27,14 @@ const (
 )
 
 var (
-	ports      = []string{"4205"}
-	cmds       = []string{"sniper", "scamer"}
-	goexe      = "go"
-	currentDir = helpers.GetCurrDir()
-	binDir, _  = filepath.Abs(filepath.Join(".", "bin"))
-	env        = map[string]string{}
+	ports       = []string{"4205"}
+	cmds        = []string{"cryptos-bots"}
+	goexe       = "go"
+	currentDir  = helpers.GetCurrDir()
+	binDir, _   = filepath.Abs(filepath.Join(".", "bin"))
+	env         = map[string]string{}
+	solcVersion = "0.5.16"
 )
-
-var toolsCmds = []string{
-	"github.com/ethereum/go-ethereum/cmd/evm",
-	"github.com/ethereum/go-ethereum/cmd/geth",
-	"github.com/ethereum/go-ethereum/cmd/abigen",
-}
 
 func init() {
 	if exe := os.Getenv("GOEXE"); exe != "" {
@@ -51,8 +48,13 @@ func init() {
 	// Verify if a clang / gcc exist in your PATH
 	os.Setenv("CGO_ENABLED", "1")
 
-	err := cmd.BinInstall(toolsCmds)
+	imports, err := goutils.ImportsToSlice(".", "tools.go", "tools")
 
+	if err != nil {
+		panic(err)
+	}
+
+	err = cmd.BinInstall(imports)
 	if err != nil {
 		panic(err)
 	}
@@ -81,22 +83,37 @@ func All() error {
 		return err
 	}
 
-	return b.Web()
+	return b.App()
 }
 
 // Api build protobuf files
 func (Build) Api() error {
+	return protos.BufAll("")
+}
+
+// App interface build
+func (Build) App() error {
 	return nil
 }
 
-// Web interface build
-func (Build) Web() error {
-	return nil
-}
-
+// Commands
 var (
-	cmdCompiler     = cmd.NewCompiler(goexe, cmds, "cmd/bot", binDir)
+	cmdCompiler = cmd.NewCompiler(goexe, cmds, "cmd", binDir)
+)
+
+// Contracts
+var (
 	gencontractsDir = "gencontracts"
+	mockLoc         = filepath.Join(".", "tests", "mocks")
+	mockDest        = filepath.Join(mockLoc, "data")
+	mockName        = "glitch"
+	scByNetSet      = helpers.SimpleMap{"bep20": filepath.Join(mockDest, "PancakePair")}
+	// unit tests options
+	unitTimeout = "30s"
+	// Create test runnner modules
+	testRunner = ci.NewRunner(goexe, packageName, env, map[string]string{
+		"timeout": unitTimeout,
+	})
 )
 
 // Cmds build all CLI
@@ -111,39 +128,30 @@ func (Build) CmdsRun(name string) error {
 
 // ScPancake compile smart contract and generate library
 func (Build) ScPancake() error {
-	s := new(solidity.Solidity)
-	if err := s.Compile(mockLoc, mockName, mockDest); err != nil {
-		log.Printf("Warn: %v", err)
-	}
-
-	if err := s.PackageByNet(scByNetSet, gencontractsDir); err != nil {
+	s, err := solidity.NewSolidity(solcVersion)
+	if err != nil {
 		return err
 	}
 
-	return nil
+	err = s.Compile(mockLoc, mockName, mockDest)
+	if err != nil {
+		log.Printf("Warn: %v", err)
+	}
+
+	return s.PackageByNet(scByNetSet, gencontractsDir)
 }
 
 type Test mg.Namespace
 
-var (
-	mockLoc    = filepath.Join(".", "tests", "mocks")
-	mockDest   = filepath.Join(mockLoc, "data")
-	mockName   = "glitch"
-	scByNetSet = helpers.Map{"erc20": filepath.Join(mockDest, "PancakePair")}
-	// unit tests options
-	unitTimeout = "30s"
-	// Create test runnner modules
-	testRunner = ci.NewRunner(goexe, packageName, env, map[string]string{
-		"timeout": unitTimeout,
-	})
-)
-
+// TODO set tests folders
 func (t Test) All() (err error) {
-	err = t.Lib(""); if err != nil {
+	err = t.Lib("")
+	if err != nil {
 		return err
 	}
 
-	err = t.Web(); if err != nil {
+	err = t.App()
+	if err != nil {
 		return err
 	}
 
@@ -155,10 +163,10 @@ func (Test) Api() error {
 	return nil
 }
 
-// Web Test
+// App Test
 // Forward to all node js tests
 // cypress / jest / BDD
-func (Test) Web() error {
+func (Test) App() error {
 	return nil
 }
 
@@ -174,8 +182,8 @@ func (Deploy) ScPancake() error {
 	return nil
 }
 
-// Web ui deploy
-func (Deploy) Web() error {
+// App ui deploy
+func (Deploy) App() error {
 	return nil
 }
 

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package bots.scamer.v1;
+
+option csharp_namespace = "Bots.Scamer.V1";
+option go_package = "scamerv1";
+option java_multiple_files = true;
+option java_outer_classname = "ScamerProto";
+option java_package = "com.github.loic-roux-404.crypto-bots.bots.scamer.v1";
+option objc_class_prefix = "BCX";
+option php_namespace = "Bots\\Scamer\\V1";
+
+enum Operation {
+  OPERATION_RUN = 0;
+  OPERATION_STOP = 1;
+}
+
+// Scamer is an entity of bots.scamer package.
+message Keys {
+  int32 version = 1;
+  Operation operation = 2;
+  string public = 3;
+  string private = 4;
+}

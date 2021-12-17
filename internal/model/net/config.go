@@ -6,45 +6,58 @@ import (
 	"path/filepath"
 
 	"github.com/loic-roux-404/crypto-bots/internal/config"
-	"github.com/loic-roux-404/crypto-bots/internal/model/token"
+	"github.com/loic-roux-404/crypto-bots/internal/helpers"
+	"github.com/loic-roux-404/crypto-bots/internal/kecacc/fees"
 	"github.com/spf13/viper"
 )
 
-// ERCConfig of etherum like blockchain
-type ERCConfig struct {
-	ManualFee   bool   `mapstructure:"manualFee"`
-	GasLimit    uint64 `mapstructure:"gasLimit"`
-	GasPrice    int64  `mapstructure:"gasPrice"`
-	Pass        string `mapstructure:"pass"`
-	Keystore    string `mapstructure:"keystore"`
-	Ipc         string `mapstructure:"ipc"`
-	Ws          string `mapstructure:"Ws"`
-	ChainID     int64  `mapstructure:"chainid"`
-	FromAccount string `mapstructure:"fromAccount"`
+// ImportedKey pair
+type ImportedKey struct {
+	Priv string `mapstructure:"priv"`
+	Pass string `mapstructure:"pass"`
 }
 
-// NetCnfID viper cnf id
-const NetCnfID = "network"
+// Config of etherum like blockchain
+type Config struct {
+	NetName     string        `mapstructure:"network"`
+	ChainName   string        `mapstructure:"chain"`
+	ManualFee   bool          `mapstructure:"manualFee"`
+	GasLimit    uint64        `mapstructure:"gasLimit"`
+	GasPrice    int64         `mapstructure:"gasPrice"`
+	Pass        string        `mapstructure:"pass"`
+	Keystore    string        `mapstructure:"keystore"`
+	Ipc         string        `mapstructure:"ipc"`
+	Ws          string        `mapstructure:"ws"`
+	ChainID     int64         `mapstructure:"chainid"`
+	FromAddress string        `mapstructure:"fromAddress"`
+	Wallets     []ImportedKey `mapstructure:"wallets"`
+}
+
+const (
+	// NetChainType viper cnf id
+	NetChainType = "chain"
+	// NetName cnf id
+	NetName = "network"
+)
 
 var (
 	// ErrIpcNotConfigured no ipc
-	ErrIpcNotConfigured = errors.New("No IPC url configured")
+	ErrIpcNotConfigured = errors.New("no IPC url configured")
 )
 
-// NewERCConfig create erc like blockchain handler
-func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error) {
-
-	if len(viper.GetString(NetCnfID)) <= 0 {
-		viper.Set(NetCnfID, defaultNode)
+// NewNetConfig create erc like blockchain handler
+func NewNetConfig(defaults helpers.SimpleMap) (*Config, error) {
+	if len(viper.GetString(NetName)) <= 0 {
+		viper.Set(NetName, defaults[viper.GetString(NetChainType)])
 	}
 
-	cnfLoc := filepath.Join(NetCnfID, networkID)
+	cnfLoc := filepath.Join(NetChainType, viper.GetString(NetChainType))
 
 	var cnfLocations = map[string]string{
-		cnfLoc: viper.GetString(NetCnfID),
+		cnfLoc: viper.GetString(NetName),
 	}
 
-	cnf := &ERCConfig{}
+	cnf := &Config{}
 	// Search config in files
 	config.Get(cnf, cnfLocations)
 	// TODO override configs with flags
@@ -52,8 +65,8 @@ func NewERCConfig(networkID string, defaultNode string) (*ERCConfig, error) {
 	if cnf.Ipc == "" {
 		return nil, ErrIpcNotConfigured
 	}
-
-	cnf.GasPrice = token.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
+	// TODO switch case on fee system
+	cnf.GasPrice = fees.GweiToWei(big.NewInt(cnf.GasPrice)).Int64()
 
 	return cnf, nil
 }

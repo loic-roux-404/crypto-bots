@@ -14,14 +14,37 @@ type Fmt mg.Namespace
 
 var env = map[string]string{}
 
-// Fix go files format
-func (Fmt) Fix() error {
+func (f Fmt) All() (err error) {
+	err = f.Go(); if err != nil {
+		return err
+	}
+
+	err = f.ProtoCheck("grpc/proto", "buf lint"); if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GoFix bad formatted files
+func (Fmt) GoFix() error {
 	return sh.Run("gofmt", "-s", "-d", "-w", ".")
 }
 
-// Check go files format (useful in a CI)
-func (Fmt) Check() (err error) {
-	out, err := helpers.RunAndGetStdout(sh.RunWithV, env, "gofmt", "-d", "-e", "-l", ".");
+// Go go files format (useful in a CI)
+func (Fmt) Go() error {
+	out, err := helpers.RunAndGetStdout(sh.RunWithV, env, "gofmt", "-d", "-e", "-l", ".")
+
+	return fmtErrExit(out, "Error: Syntax in file : %s", err)
+}
+
+func (Fmt) ProtoCheck(dir, bin string) error {
+	out, err := helpers.RunAndGetStdout(sh.RunWithV, env, "buf", "lint", dir)
+
+	return fmtErrExit(out, "Error: Syntax in proto file : %s", err)
+}
+
+func fmtErrExit(out, msgFmt string, err error) error {
 	hasFmtErr := len(out) > 0
 
 	if !hasFmtErr && err == nil {

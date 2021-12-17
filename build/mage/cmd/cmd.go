@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/magefile/mage/sh"
@@ -21,8 +20,13 @@ func ToFlagsStr(flagList []string) string {
 
 func pkgToCmd(pkg string) string {
 	parts := strings.Split(pkg, "/")
+	pkgPart := parts[len(parts)-1]
 
-	return parts[len(parts)-1]
+	if strings.Contains(pkgPart, "@") {
+		pkgPart = strings.Split(pkgPart, "@")[0]
+	}
+
+	return pkgPart
 }
 
 // PkgCommandExist in PATH
@@ -35,8 +39,8 @@ func BinInstall(tools []string) error {
 	for _, pkg := range tools {
 
 		if pkgCommandExist(pkg) {
-			fmt.Printf("%s Already installed\n", pkg)
-			return nil
+			// Verbose mode ?
+			continue
 		}
 
 		err := sh.Run("go", "install", pkg)
