@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
-	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
+	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 )
 
 var (
@@ -41,7 +41,7 @@ func NewWallet(
 	pass string,
 	importKs string,
 	fromAcc string,
-	importKeys []wallet.ImportedKey,
+	importKeys []net.ImportedKey,
 ) (kecacc *KeccacWallet, err error) {
 	if len(pass) <= 0 {
 		return nil, errPassMissing
@@ -136,7 +136,7 @@ func (k *KeccacWallet) addKs(
 }
 
 // AddPrivs key to keystore
-func (k *KeccacWallet) AddPrivs(importKeys []wallet.ImportedKey) {
+func (k *KeccacWallet) AddPrivs(importKeys []net.ImportedKey) {
 	if importKeys == nil || len(importKeys) <= 0 {
 		return
 	}

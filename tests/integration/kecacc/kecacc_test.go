@@ -6,7 +6,7 @@ import (
 
 	"github.com/loic-roux-404/crypto-bots/internal/helpers"
 	"github.com/loic-roux-404/crypto-bots/internal/kecacc"
-	"github.com/loic-roux-404/crypto-bots/internal/model/wallet"
+	"github.com/loic-roux-404/crypto-bots/internal/model/net"
 	"github.com/loic-roux-404/crypto-bots/tests"
 )
 
@@ -20,7 +20,7 @@ func TestKecacc(t *testing.T) {
 		"admin",
 		tests.DummyKs,
 		tests.DummyAddress,
-		[]wallet.ImportedKey{
+		[]net.ImportedKey{
 			{Priv: tests.DummyPriv},
 		},
 	)

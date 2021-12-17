@@ -52,7 +52,10 @@ DEX :
     - [ ] Control verbose
     - [ ] Control error process control (exit on fail)
     - [ ] Create a keccac chain client adapter (function Dial with same arg bep / erc)
-
+- Api
+    - Generate dart files : https://github.com/google/protobuf.dart/tree/master/protoc_plugin
+        - [ ] Add installation in Magefile
+        - [ ] Add command to buf and generate dart files
 #### Strategies
 
 - [x] wallet (forward fee funds)
